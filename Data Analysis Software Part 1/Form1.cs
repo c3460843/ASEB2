@@ -18,21 +18,38 @@ namespace Data_Analysis_Software_Part_2
         Stream myStream = null;
         DateTime startDate;
         int counter = 0;
+        int checkCount = 0;
         int timeSecs = 0;
         int interval;
+        int userSetFTP = 0;
+        int userSetHeartRateMaximum = 0;
+        int tickBoxValue = 0;
+        int portionValue = 0;
+
         double speedTotal = 0;
         double speedMaximum = 0;
         double altitudeTotal = 0;
         double altitudeMaximum = 0;
         int heartRateTotal = 0;
-        int userSetHeartRateMaximum = 0;
         int heartRateMaximum = 0;
         int heartRateMinimum = 0;
         int powerTotal = 0;
         int powerMaximum = 0;
-        int userSetFTP = 0;
         decimal distanceTotal = 0;
         bool distanceCalculationFlag = false;
+
+        double speedTotalRange = 0;
+        double speedMaximumRange = 0;
+        double altitudeTotalRange = 0;
+        double altitudeMaximumRange = 0;
+        int heartRateTotalRange = 0;
+        int heartRateMaximumRange = 0;
+        int heartRateMinimumRange = 0;
+        int powerTotalRange = 0;
+        int powerMaximumRange = 0;
+        decimal distanceTotalRange = 0;
+        bool distanceCalculationFlagRange = false;
+
         int version;
         bool sModeSpeed;
         bool sModeCadence;
@@ -43,13 +60,16 @@ namespace Data_Analysis_Software_Part_2
         bool sModeHRCC;
         bool sModeUnitStandard;
         bool sModeAirPressure;
+
         List<string> timeList = new List<string>();
         List<double> speedList = new List<double>();
         List<int> cadenceList = new List<int>();
         List<double> altitudeList = new List<double>();
         List<int> heartRateList = new List<int>();
         List<int> powerList = new List<int>();
-        List<int> pBBIList = new List<int>();
+        List<int> powerBalancePedallingIndexList = new List<int>();
+        List<int> powerLeftRightBalanceList = new List<int>();
+        List<int> powerPedallingIndexList = new List<int>();
         List<decimal> distanceList = new List<decimal>();
         List<double> heartRatePercentageList = new List<double>();
         List<double> powerPercentageList = new List<double>();
@@ -57,6 +77,36 @@ namespace Data_Analysis_Software_Part_2
         public Form1()
         {
             InitializeComponent();
+            checkBoxSPAll.Checked = true;
+            buttonAddSP2.Enabled = false;
+            buttonAddSP3.Enabled = false;
+            buttonAddSP4.Enabled = false;
+            buttonRemoveSP1.Enabled = false;
+            buttonRemoveSP2.Enabled = false;
+            buttonRemoveSP3.Enabled = false;
+            buttonRemoveSP4.Enabled = false;
+            checkBoxSP1.Enabled = false;
+            checkBoxSP2.Enabled = false;
+            checkBoxSP3.Enabled = false;
+            checkBoxSP4.Enabled = false;
+            textBoxSPStartH2.Enabled = false;
+            textBoxSPStartH3.Enabled = false;
+            textBoxSPStartH4.Enabled = false;
+            textBoxSPStartM2.Enabled = false;
+            textBoxSPStartM3.Enabled = false;
+            textBoxSPStartM4.Enabled = false;
+            textBoxSPStartS2.Enabled = false;
+            textBoxSPStartS3.Enabled = false;
+            textBoxSPStartS4.Enabled = false;
+            textBoxSPEndH2.Enabled = false;
+            textBoxSPEndH3.Enabled = false;
+            textBoxSPEndH4.Enabled = false;
+            textBoxSPEndM2.Enabled = false;
+            textBoxSPEndM3.Enabled = false;
+            textBoxSPEndM4.Enabled = false;
+            textBoxSPEndS2.Enabled = false;
+            textBoxSPEndS3.Enabled = false;
+            textBoxSPEndS4.Enabled = false;
         }
 
         /// <summary>
@@ -136,6 +186,7 @@ namespace Data_Analysis_Software_Part_2
                         string timeString = timeSpan.ToString(@"hh\:mm\:ss");
                         String[] lineArray = line.Split();
                         timeList.Add(timeString);
+
                         heartRateList.Add(Int32.Parse(lineArray[0]));
 
                         if (sModeSpeed == true)
@@ -146,7 +197,12 @@ namespace Data_Analysis_Software_Part_2
                         if (sModeCadence == true)               { cadenceList.Add(Int32.Parse(lineArray[2])); }
                         if (sModeAltitude == true)              { altitudeList.Add(Int32.Parse(lineArray[3])); }
                         if (sModePower == true)                 { powerList.Add(Int32.Parse(lineArray[4])); }
-                        if (sModePowerLeftRightBalance == true) { pBBIList.Add(Int32.Parse(lineArray[5])); }
+
+                        if (sModePowerLeftRightBalance == true || sModePowerPedallingIndex == true)
+                        { powerBalancePedallingIndexList.Add(Int32.Parse(lineArray[5])); }
+
+                        if (sModePowerLeftRightBalance == true) { powerLeftRightBalanceList.Add(1); }
+                        if (sModePowerPedallingIndex == true)   { powerPedallingIndexList.Add(1); }
                     }
                 }
                 counter++;
@@ -185,7 +241,7 @@ namespace Data_Analysis_Software_Part_2
                     if (heartRateTrackBar.Value == 0)      { heartRateValue = heartRateList[i].ToString(); }
                     else if (heartRateTrackBar.Value == 1) { heartRateValue = Math.Round(heartRatePercentageList[i], 2).ToString();  }
                 }
-                dataGridView.Rows.Add(timeList[i], heartRateValue, speedValue, cadenceValue, altitudeValue, powerValue, pBBIList[i]);
+                dataGridView.Rows.Add(timeList[i], heartRateValue, speedValue, cadenceValue, altitudeValue, powerValue, powerBalancePedallingIndexList[i]);
             }
             Console.WriteLine("AddRows()");
         }
@@ -257,6 +313,100 @@ namespace Data_Analysis_Software_Part_2
             Console.WriteLine("Calculate()");
         }
 
+
+        /// <summary>
+        /// Calculates all the averages from a user specified portion.
+        /// </summary>
+        private void CalculatePortion(int min, int max)
+        {
+
+            Console.WriteLine("min = " + min);
+            Console.WriteLine("max = " + max);
+
+            speedTotalRange = 0;
+            speedMaximumRange = 0;
+            altitudeTotalRange = 0;
+            heartRateTotalRange = 0;
+            powerTotalRange = 0;
+
+            try
+            {
+                List<int> heartTateListRange = heartRateList.GetRange(min, (max - min) + 1);
+                List<double> speedListRange = speedList.GetRange(min, (max - min) + 1);
+                List<double> altitudeListRange = altitudeList.GetRange(min, (max - min) + 1);
+                List<int> powerListRange = powerList.GetRange(min, (max - min) + 1);
+                List<decimal> distanceListRange = distanceList.GetRange(min, (max - min) + 1);
+
+                foreach (int heartRateInt in heartTateListRange)
+                {
+                    Console.WriteLine(heartRateInt);
+                    heartRateTotalRange += heartRateInt;
+                }
+                double heartRateAverage = heartRateTotalRange / heartTateListRange.Count;
+                heartRateAverageRangeLabel.Text = heartRateAverage.ToString() + "bpm";
+
+                foreach (double speedDouble in speedListRange) { speedTotalRange += speedDouble; }
+                double speedAverage = speedTotalRange / speedListRange.Count;
+                speedAverage = Math.Round(speedAverage, 1);
+                if (measurementTrackBar.Value == 0) { speedAverageRangeLabel.Text = (speedAverage / 10).ToString() + "km/h"; }
+                else if (measurementTrackBar.Value == 1) { speedAverageRangeLabel.Text = (speedAverage / 10).ToString() + "mph"; }
+
+                foreach (double altitudeDouble in altitudeListRange) { altitudeTotalRange += altitudeDouble; }
+                double altitudeAverage = altitudeTotalRange / altitudeListRange.Count;
+                altitudeAverage = Math.Round(altitudeAverage, 2);
+                if (measurementTrackBar.Value == 0) { altitudeAverageRangeLabel.Text = altitudeAverage.ToString() + "m"; }
+                else if (measurementTrackBar.Value == 1) { altitudeAverageRangeLabel.Text = altitudeAverage.ToString() + "ft"; }
+
+                foreach (int powerInt in powerListRange) { powerTotalRange += powerInt; }
+                double powerAverage = powerTotalRange / powerListRange.Count;
+                powerAverageRangeLabel.Text = powerAverage.ToString() + "W";
+
+                foreach (double speedInt in speedListRange) { if (speedInt > speedMaximumRange) { speedMaximumRange = speedInt; } }
+                if (measurementTrackBar.Value == 0) { speedMaximumRangeLabel.Text = (speedMaximumRange / 10) + "km/h"; }
+                else if (measurementTrackBar.Value == 1) { speedMaximumRangeLabel.Text = (speedMaximumRange / 10) + "mph"; }
+
+                if (distanceCalculationFlagRange == false)
+                {
+                    foreach (decimal distanceDecimal in distanceListRange) { distanceTotalRange += distanceDecimal; }
+                    distanceTotalRange = Math.Round(distanceTotalRange, 1);
+                    distanceCalculationFlagRange = true;
+                }
+                if (measurementTrackBar.Value == 0) { totalDistanceRangeLabel.Text = (distanceTotalRange / 10) + "km"; }
+                else if (measurementTrackBar.Value == 1) { totalDistanceRangeLabel.Text = (distanceTotalRange / 10) + "miles"; }
+
+                foreach (int heartRateInt in heartTateListRange) { if (heartRateInt > heartRateMaximumRange) { heartRateMaximumRange = heartRateInt; } }
+                heartRateMaximumRangeLabel.Text = heartRateMaximumRange + "bpm";
+
+                heartRateMinimumRange = heartTateListRange[0];
+                foreach (int heartRateInt in heartTateListRange) { if (heartRateInt < heartRateMinimumRange) { heartRateMinimumRange = heartRateInt; } }
+                heartRateMinimumRangeLabel.Text = heartRateMinimumRange + "bpm";
+
+                foreach (int powerInt in powerListRange) { if (powerInt > powerMaximumRange) { powerMaximumRange = powerInt; } }
+                powerMaximumRangeLabel.Text = powerMaximumRange + "W";
+
+                foreach (double altitudeInt in altitudeListRange) { if (altitudeInt > altitudeMaximumRange) { altitudeMaximumRange = altitudeInt; } }
+                if (measurementTrackBar.Value == 0) { altitudeMaximumRangeLabel.Text = altitudeMaximumRange + "m"; }
+                else if (measurementTrackBar.Value == 1) { altitudeMaximumRangeLabel.Text = altitudeMaximumRange + "ft"; }
+            }
+            catch (System.DivideByZeroException)
+            {
+                //No user dialogue needed.
+            }
+            speedTotalRange = 0;
+            speedMaximumRange = 0;
+            altitudeTotalRange = 0;
+            altitudeMaximumRange = 0;
+            heartRateTotalRange = 0;
+            heartRateMaximumRange = 0;
+            heartRateMinimumRange = 0;
+            powerTotalRange = 0;
+            powerMaximumRange = 0;
+            distanceTotalRange = 0;
+            distanceCalculationFlagRange = false;
+            Console.WriteLine("CalculatePortion()");
+        }
+
+
         /// <summary>
         /// Plots the zedGraph for numerical data.
         /// </summary>
@@ -289,6 +439,7 @@ namespace Data_Analysis_Software_Part_2
             myPane1.XAxis.Scale.Format = "HH:mm:ss";
             myPane1.XAxis.Scale.MajorUnit = DateUnit.Minute;
             myPane1.XAxis.Scale.MinorUnit = DateUnit.Minute;
+         
 
             var y1 = myPane1.AddYAxis("KM/H");
             var y2 = myPane1.AddYAxis("RPM");
@@ -315,6 +466,7 @@ namespace Data_Analysis_Software_Part_2
 
             speedCurve.YAxisIndex = y1;
             myPane1.YAxis.Color = Color.Gray;
+            //myPane1.YAxis.Title.FontSpec.Size = 6;
 
             LineItem cadenceCurve = myPane1.AddCurve("Cadence (RPM)",
                   cadencePairList, Color.Green, SymbolType.None);
@@ -342,7 +494,11 @@ namespace Data_Analysis_Software_Part_2
             zedGraphControl1.Refresh();
 
             Console.WriteLine("PlotGraph1()");
+
+            //Console.WriteLine(myPane1.XAxis.Min);
+            //Console.WriteLine(myPane1.XAxis.Min);
         }
+
 
         /// <summary>
         /// Plots the zedGraph for percentage data.
@@ -453,6 +609,44 @@ namespace Data_Analysis_Software_Part_2
             AddRows();
             Thread.Sleep(50);
             Calculate();
+
+            int min=0;
+            int max=0;
+            string minTimeString;
+            string maxTimeString;
+            switch (tickBoxValue)
+            {
+                case 0:
+                    min = 0;
+                    max = 0;
+                    break;
+                case 1:
+                    minTimeString = textBoxSPStartH1.Text + ":" + textBoxSPStartM1.Text + ":" + textBoxSPStartS1.Text;
+                    min = timeList.IndexOf(minTimeString);
+                    maxTimeString = textBoxSPEndH1.Text + ":" + textBoxSPEndM1.Text + ":" + textBoxSPEndS1.Text;
+                    max = timeList.IndexOf(maxTimeString);
+                    break;
+                case 2:
+                    minTimeString = textBoxSPStartH2.Text + ":" + textBoxSPStartM2.Text + ":" + textBoxSPStartS2.Text;
+                    min = timeList.IndexOf(minTimeString);
+                    maxTimeString = textBoxSPEndH2.Text + ":" + textBoxSPEndM2.Text + ":" + textBoxSPEndS2.Text;
+                    max = timeList.IndexOf(maxTimeString);
+                    break;
+                case 3:
+                    minTimeString = textBoxSPStartH3.Text + ":" + textBoxSPStartM3.Text + ":" + textBoxSPStartS3.Text;
+                    min = timeList.IndexOf(minTimeString);
+                    maxTimeString = textBoxSPEndH3.Text + ":" + textBoxSPEndM3.Text + ":" + textBoxSPEndS3.Text;
+                    max = timeList.IndexOf(maxTimeString);
+                    break;
+                case 4:
+                    minTimeString = textBoxSPStartH4.Text + ":" + textBoxSPStartM4.Text + ":" + textBoxSPStartS4.Text;
+                    min = timeList.IndexOf(minTimeString);
+                    maxTimeString = textBoxSPEndH4.Text + ":" + textBoxSPEndM4.Text + ":" + textBoxSPEndS4.Text;
+                    max = timeList.IndexOf(maxTimeString);
+                    break;
+            }
+            if (min != 0 && max != 0) { CalculatePortion(min, max); }
+
             PlotGraph1();
             Console.WriteLine("measurementTrackBar_ValueChanged()");
         }
@@ -473,7 +667,9 @@ namespace Data_Analysis_Software_Part_2
             }
 
             distanceTotal = Math.Round(distanceTotal * (Convert.ToDecimal(0.6214)), 1);
+            distanceTotalRange = Math.Round(distanceTotalRange * (Convert.ToDecimal(0.6214)), 1);
             altitudeMaximum = Math.Round(altitudeMaximum * 3.2808);
+            altitudeMaximumRange = Math.Round(altitudeMaximumRange * 3.2808);
             dataGridView.Columns[2].HeaderText = "Speed (mph)";
             dataGridView.Columns[4].HeaderText = "Altitude (ft)";
         }
@@ -494,7 +690,9 @@ namespace Data_Analysis_Software_Part_2
             }
 
             distanceTotal = Math.Round(distanceTotal * (Convert.ToDecimal(1.6093)), 1);
+            distanceTotalRange = Math.Round(distanceTotalRange * (Convert.ToDecimal(1.6093)), 1);
             altitudeMaximum = Math.Round(altitudeMaximum * 0.3048);
+            altitudeMaximumRange = Math.Round(altitudeMaximumRange * 0.3048);
             dataGridView.Columns[2].HeaderText = "Speed (km/h)";
             dataGridView.Columns[4].HeaderText = "Altitude (m)";
         }
@@ -589,9 +787,324 @@ namespace Data_Analysis_Software_Part_2
             MessageBox.Show("Created by c3460843 using ZedGraph.");
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void checkBoxSPAll_CheckedChanged(object sender, EventArgs e)
         {
+            if (checkBoxSPAll.Checked == true)
+            {
+                checkBoxSPAll.Enabled = false;
+                if (checkCount >= 1) { checkBoxSP1.Enabled = true; }
+                if (checkCount >= 2) { checkBoxSP2.Enabled = true; }
+                if (checkCount >= 3) { checkBoxSP3.Enabled = true; }
+                if (checkCount >= 4) { checkBoxSP4.Enabled = true; }
+                checkBoxSP1.Checked = false;
+                checkBoxSP2.Checked = false;
+                checkBoxSP3.Checked = false;
+                checkBoxSP4.Checked = false;
+                tickBoxValue = 0;
 
+                string minTimeString = textBoxSPStartH1.Text + ":" + textBoxSPStartM1.Text + ":" + textBoxSPStartS1.Text;
+                string maxTimeString = "";
+
+                if (portionValue == 1) { maxTimeString = textBoxSPEndH1.Text + ":" + textBoxSPEndM1.Text + ":" + textBoxSPEndS1.Text; }
+                if (portionValue == 2) { maxTimeString = textBoxSPEndH2.Text + ":" + textBoxSPEndM2.Text + ":" + textBoxSPEndS2.Text; }
+                if (portionValue == 3) { maxTimeString = textBoxSPEndH3.Text + ":" + textBoxSPEndM3.Text + ":" + textBoxSPEndS3.Text; }
+                if (portionValue == 4) { maxTimeString = textBoxSPEndH4.Text + ":" + textBoxSPEndM4.Text + ":" + textBoxSPEndS4.Text; }
+
+                if (portionValue != 0) { CalculatePortion(timeList.IndexOf(minTimeString), timeList.IndexOf(maxTimeString)); }
+            }
+        }
+
+        private void checkBoxSP1_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxSP1.Checked == true)
+            {
+                checkBoxSPAll.Enabled = true;
+                checkBoxSP1.Enabled = false;
+                if (checkCount >= 2) { checkBoxSP2.Enabled = true; }
+                if (checkCount >= 3) { checkBoxSP3.Enabled = true; }
+                if (checkCount >= 4) { checkBoxSP4.Enabled = true; }
+                checkBoxSPAll.Checked = false;
+                checkBoxSP2.Checked = false;
+                checkBoxSP3.Checked = false;
+                checkBoxSP4.Checked = false;
+                tickBoxValue = 1;
+
+                string minTimeString = textBoxSPStartH1.Text + ":" + textBoxSPStartM1.Text + ":" + textBoxSPStartS1.Text;
+                string maxTimeString = textBoxSPEndH1.Text + ":" + textBoxSPEndM1.Text + ":" + textBoxSPEndS1.Text;
+                CalculatePortion(timeList.IndexOf(minTimeString), timeList.IndexOf(maxTimeString));
+
+            }
+        }
+
+        private void checkBoxSP2_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxSP2.Checked == true)
+            {
+                checkBoxSPAll.Enabled = true;
+                checkBoxSP1.Enabled = true;
+                checkBoxSP2.Enabled = false;
+                if (checkCount >= 3) { checkBoxSP3.Enabled = true; }
+                if (checkCount >= 4) { checkBoxSP4.Enabled = true; }
+                checkBoxSPAll.Checked = false;
+                checkBoxSP1.Checked = false;
+                checkBoxSP3.Checked = false;
+                checkBoxSP4.Checked = false;
+                tickBoxValue = 2;
+
+                string minTimeString = textBoxSPStartH2.Text + ":" + textBoxSPStartM2.Text + ":" + textBoxSPStartS2.Text;
+                string maxTimeString = textBoxSPEndH2.Text + ":" + textBoxSPEndM2.Text + ":" + textBoxSPEndS2.Text;
+                CalculatePortion(timeList.IndexOf(minTimeString), timeList.IndexOf(maxTimeString));
+            }
+        }
+
+        private void checkBoxSP3_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxSP3.Checked == true)
+            {
+                checkBoxSPAll.Enabled = true;
+                checkBoxSP1.Enabled = true;
+                checkBoxSP2.Enabled = true;
+                checkBoxSP3.Enabled = false;
+                if (checkCount >= 4) { checkBoxSP4.Enabled = true; }
+                checkBoxSPAll.Checked = false;
+                checkBoxSP1.Checked = false;
+                checkBoxSP2.Checked = false;
+                checkBoxSP4.Checked = false;
+                tickBoxValue = 3;
+
+                string minTimeString = textBoxSPStartH3.Text + ":" + textBoxSPStartM3.Text + ":" + textBoxSPStartS3.Text;
+                string maxTimeString = textBoxSPEndH3.Text + ":" + textBoxSPEndM3.Text + ":" + textBoxSPEndS3.Text;
+                CalculatePortion(timeList.IndexOf(minTimeString), timeList.IndexOf(maxTimeString));
+            }
+        }
+
+        private void checkBoxSP4_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxSP4.Checked == true)
+            {
+                checkBoxSPAll.Enabled = true;
+                checkBoxSP1.Enabled = true;
+                checkBoxSP2.Enabled = true;
+                checkBoxSP3.Enabled = true;
+                checkBoxSP4.Enabled = false;
+                checkBoxSPAll.Checked = false;
+                checkBoxSP1.Checked = false;
+                checkBoxSP2.Checked = false;
+                checkBoxSP3.Checked = false;
+                tickBoxValue = 4;
+
+                string minTimeString = textBoxSPStartH4.Text + ":" + textBoxSPStartM4.Text + ":" + textBoxSPStartS4.Text;
+                string maxTimeString = textBoxSPEndH4.Text + ":" + textBoxSPEndM4.Text + ":" + textBoxSPEndS4.Text;
+                CalculatePortion(timeList.IndexOf(minTimeString), timeList.IndexOf(maxTimeString));
+            }
+        }
+
+        private void buttonAddSP1_Click(object sender, EventArgs e)
+        {
+            buttonAddSP1.Enabled = false;
+            buttonRemoveSP1.Enabled = true;
+            checkBoxSP1.Enabled = true;
+            buttonAddSP2.Enabled = true;
+            textBoxSPStartH1.Enabled = false;
+            textBoxSPStartM1.Enabled = false;
+            textBoxSPStartS1.Enabled = false;
+            textBoxSPEndH1.Enabled = false;
+            textBoxSPEndM1.Enabled = false;
+            textBoxSPEndS1.Enabled = false;
+            textBoxSPStartH2.Enabled = true;
+            textBoxSPStartM2.Enabled = true;
+            textBoxSPStartS2.Enabled = true;
+            textBoxSPEndH2.Enabled = true;
+            textBoxSPEndM2.Enabled = true;
+            textBoxSPEndS2.Enabled = true;
+            checkCount++;
+            portionValue = 1;
+
+            textBoxSPStartHAll.Text = textBoxSPStartH1.Text;
+            textBoxSPStartMAll.Text = textBoxSPStartM1.Text;
+            textBoxSPStartSAll.Text = textBoxSPStartS1.Text;
+
+            textBoxSPEndHAll.Text = textBoxSPEndH1.Text;
+            textBoxSPEndMAll.Text = textBoxSPEndM1.Text;
+            textBoxSPEndSAll.Text = textBoxSPEndS1.Text;
+        }
+
+        private void buttonAddSP2_Click(object sender, EventArgs e)
+        {
+            buttonAddSP2.Enabled = false;
+            buttonRemoveSP1.Enabled = false;
+            buttonRemoveSP2.Enabled = true;
+            checkBoxSP2.Enabled = true;
+            buttonAddSP3.Enabled = true;
+            textBoxSPStartH2.Enabled = false;
+            textBoxSPStartM2.Enabled = false;
+            textBoxSPStartS2.Enabled = false;
+            textBoxSPEndH2.Enabled = false;
+            textBoxSPEndM2.Enabled = false;
+            textBoxSPEndS2.Enabled = false;
+            textBoxSPStartH3.Enabled = true;
+            textBoxSPStartM3.Enabled = true;
+            textBoxSPStartS3.Enabled = true;
+            textBoxSPEndH3.Enabled = true;
+            textBoxSPEndM3.Enabled = true;
+            textBoxSPEndS3.Enabled = true;
+            checkCount++;
+            portionValue = 2;
+
+            textBoxSPEndHAll.Text = textBoxSPEndH2.Text;
+            textBoxSPEndMAll.Text = textBoxSPEndM2.Text;
+            textBoxSPEndSAll.Text = textBoxSPEndS2.Text;
+        }
+
+        private void buttonAddSP3_Click(object sender, EventArgs e)
+        {
+            buttonAddSP3.Enabled = false;
+            buttonRemoveSP2.Enabled = false;
+            buttonRemoveSP3.Enabled = true;
+            checkBoxSP3.Enabled = true;
+            buttonAddSP4.Enabled = true;
+            textBoxSPStartH3.Enabled = false;
+            textBoxSPStartM3.Enabled = false;
+            textBoxSPStartS3.Enabled = false;
+            textBoxSPEndH3.Enabled = false;
+            textBoxSPEndM3.Enabled = false;
+            textBoxSPEndS3.Enabled = false;
+            textBoxSPStartH4.Enabled = true;
+            textBoxSPStartM4.Enabled = true;
+            textBoxSPStartS4.Enabled = true;
+            textBoxSPEndH4.Enabled = true;
+            textBoxSPEndM4.Enabled = true;
+            textBoxSPEndS4.Enabled = true;
+            checkCount++;
+            portionValue = 3;
+
+            textBoxSPEndHAll.Text = textBoxSPEndH3.Text;
+            textBoxSPEndMAll.Text = textBoxSPEndM3.Text;
+            textBoxSPEndSAll.Text = textBoxSPEndS3.Text;
+        }
+
+        private void buttonAddSP4_Click(object sender, EventArgs e)
+        {
+            buttonAddSP4.Enabled = false;
+            buttonRemoveSP3.Enabled = false;
+            buttonRemoveSP4.Enabled = true;
+            checkBoxSP4.Enabled = true;
+            textBoxSPStartH4.Enabled = false;
+            textBoxSPStartM4.Enabled = false;
+            textBoxSPStartS4.Enabled = false;
+            textBoxSPEndH4.Enabled = false;
+            textBoxSPEndM4.Enabled = false;
+            textBoxSPEndS4.Enabled = false;
+            checkCount++;
+            portionValue = 4;
+
+            textBoxSPEndHAll.Text = textBoxSPEndH4.Text;
+            textBoxSPEndMAll.Text = textBoxSPEndM4.Text;
+            textBoxSPEndSAll.Text = textBoxSPEndS4.Text;
+        }
+
+        private void buttonRemoveSP1_Click(object sender, EventArgs e)
+        {
+            buttonAddSP1.Enabled = true;
+            buttonRemoveSP1.Enabled = false;
+            buttonAddSP2.Enabled = false;
+            checkBoxSP1.Enabled = false;
+            textBoxSPStartH2.Enabled = false;
+            textBoxSPStartM2.Enabled = false;
+            textBoxSPStartS2.Enabled = false;
+            textBoxSPEndH2.Enabled = false;
+            textBoxSPEndM2.Enabled = false;
+            textBoxSPEndS2.Enabled = false;
+            textBoxSPStartH1.Enabled = true;
+            textBoxSPStartM1.Enabled = true;
+            textBoxSPStartS1.Enabled = true;
+            textBoxSPEndH1.Enabled = true;
+            textBoxSPEndM1.Enabled = true;
+            textBoxSPEndS1.Enabled = true;
+            checkCount--;
+            portionValue = 0;
+
+            textBoxSPStartHAll.Text = "00";
+            textBoxSPStartMAll.Text = "00";
+            textBoxSPStartSAll.Text = "00";
+
+            textBoxSPEndHAll.Text = "00";
+            textBoxSPEndMAll.Text = "00";
+            textBoxSPEndSAll.Text = "00";
+        }
+
+        private void buttonRemoveSP2_Click(object sender, EventArgs e)
+        {
+            buttonAddSP2.Enabled = true;
+            buttonRemoveSP1.Enabled = true;
+            buttonRemoveSP2.Enabled = false;
+            buttonAddSP3.Enabled = false;
+            checkBoxSP2.Enabled = false;
+            textBoxSPStartH3.Enabled = false;
+            textBoxSPStartM3.Enabled = false;
+            textBoxSPStartS3.Enabled = false;
+            textBoxSPEndH3.Enabled = false;
+            textBoxSPEndM3.Enabled = false;
+            textBoxSPEndS3.Enabled = false;
+            textBoxSPStartH2.Enabled = true;
+            textBoxSPStartM2.Enabled = true;
+            textBoxSPStartS2.Enabled = true;
+            textBoxSPEndH2.Enabled = true;
+            textBoxSPEndM2.Enabled = true;
+            textBoxSPEndS2.Enabled = true;
+            checkCount--;
+            portionValue = 1;
+
+            textBoxSPEndHAll.Text = textBoxSPEndH1.Text;
+            textBoxSPEndMAll.Text = textBoxSPEndM1.Text;
+            textBoxSPEndSAll.Text = textBoxSPEndS1.Text;
+        }
+
+        private void buttonRemoveSP3_Click(object sender, EventArgs e)
+        {
+            buttonAddSP3.Enabled = true;
+            buttonRemoveSP2.Enabled = true;
+            buttonRemoveSP3.Enabled = false;
+            buttonAddSP4.Enabled = false;
+            checkBoxSP3.Enabled = false;
+            textBoxSPStartH4.Enabled = false;
+            textBoxSPStartM4.Enabled = false;
+            textBoxSPStartS4.Enabled = false;
+            textBoxSPEndH4.Enabled = false;
+            textBoxSPEndM4.Enabled = false;
+            textBoxSPEndS4.Enabled = false;
+            textBoxSPStartH3.Enabled = true;
+            textBoxSPStartM3.Enabled = true;
+            textBoxSPStartS3.Enabled = true;
+            textBoxSPEndH3.Enabled = true;
+            textBoxSPEndM3.Enabled = true;
+            textBoxSPEndS3.Enabled = true;
+            checkCount--;
+            portionValue = 2;
+
+            textBoxSPEndHAll.Text = textBoxSPEndH2.Text;
+            textBoxSPEndMAll.Text = textBoxSPEndM2.Text;
+            textBoxSPEndSAll.Text = textBoxSPEndS2.Text;
+        }
+
+        private void buttonRemoveSP4_Click(object sender, EventArgs e)
+        {
+            buttonRemoveSP3.Enabled = true;
+            buttonRemoveSP4.Enabled = false;
+            buttonAddSP4.Enabled = true;
+            checkBoxSP4.Enabled = false;
+            textBoxSPStartH4.Enabled = true;
+            textBoxSPStartM4.Enabled = true;
+            textBoxSPStartS4.Enabled = true;
+            textBoxSPEndH4.Enabled = true;
+            textBoxSPEndM4.Enabled = true;
+            textBoxSPEndS4.Enabled = true;
+            checkCount--;
+            portionValue = 3;
+            
+            textBoxSPEndHAll.Text = textBoxSPEndH3.Text;
+            textBoxSPEndMAll.Text = textBoxSPEndM3.Text;
+            textBoxSPEndSAll.Text = textBoxSPEndS3.Text;
         }
     }
 }
