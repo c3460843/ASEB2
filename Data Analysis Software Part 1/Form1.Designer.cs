@@ -32,7 +32,6 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.openCompareToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
@@ -188,7 +187,8 @@
             this.label19 = new System.Windows.Forms.Label();
             this.textBoxSPEndH1 = new System.Windows.Forms.TextBox();
             this.buttonAddSP1 = new System.Windows.Forms.Button();
-            this.buttonRedraw = new System.Windows.Forms.Button();
+            this.button1 = new System.Windows.Forms.Button();
+            this.button2 = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.powerTrackBar)).BeginInit();
@@ -220,7 +220,6 @@
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openToolStripMenuItem,
-            this.openCompareToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
@@ -229,16 +228,9 @@
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
-            this.openToolStripMenuItem.Text = "Open (Initial)";
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.openToolStripMenuItem.Text = "Open File";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.OpenToolStripMenuItem_Click);
-            // 
-            // openCompareToolStripMenuItem
-            // 
-            this.openCompareToolStripMenuItem.Name = "openCompareToolStripMenuItem";
-            this.openCompareToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
-            this.openCompareToolStripMenuItem.Text = "Open (Compare)";
-            this.openCompareToolStripMenuItem.Click += new System.EventHandler(this.openCompareToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
@@ -264,7 +256,8 @@
             // 
             // panel1
             // 
-            this.panel1.Controls.Add(this.buttonRedraw);
+            this.panel1.Controls.Add(this.button2);
+            this.panel1.Controls.Add(this.button1);
             this.panel1.Controls.Add(this.setFTPButton);
             this.panel1.Controls.Add(this.setBPMButton);
             this.panel1.Controls.Add(this.label14);
@@ -999,7 +992,7 @@
             this.groupBoxSP.Size = new System.Drawing.Size(324, 486);
             this.groupBoxSP.TabIndex = 3;
             this.groupBoxSP.TabStop = false;
-            this.groupBoxSP.Text = "Custom Sectors";
+            this.groupBoxSP.Text = "Custom Sections";
             // 
             // label54
             // 
@@ -2101,15 +2094,25 @@
             this.buttonAddSP1.UseVisualStyleBackColor = true;
             this.buttonAddSP1.Click += new System.EventHandler(this.buttonAddSP1_Click);
             // 
-            // buttonRedraw
+            // button1
             // 
-            this.buttonRedraw.Location = new System.Drawing.Point(518, 26);
-            this.buttonRedraw.Name = "buttonRedraw";
-            this.buttonRedraw.Size = new System.Drawing.Size(75, 23);
-            this.buttonRedraw.TabIndex = 24;
-            this.buttonRedraw.Text = "Redraw";
-            this.buttonRedraw.UseVisualStyleBackColor = true;
-            this.buttonRedraw.Click += new System.EventHandler(this.buttonRedraw_Click);
+            this.button1.Location = new System.Drawing.Point(512, 19);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(71, 51);
+            this.button1.TabIndex = 25;
+            this.button1.Text = "Add Comparison File";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.openCompareToolStripMenuItem_Click);
+            // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(589, 19);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(71, 51);
+            this.button2.TabIndex = 26;
+            this.button2.Text = "Remove Comparison File";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // Form1
             // 
@@ -2305,10 +2308,10 @@
         private System.Windows.Forms.TextBox textBoxSPEndMAll;
         private System.Windows.Forms.Label label58;
         private System.Windows.Forms.TextBox textBoxSPEndHAll;
-        private System.Windows.Forms.ToolStripMenuItem openCompareToolStripMenuItem;
         private System.Windows.Forms.TabPage graphPage3;
         private ZedGraph.ZedGraphControl zedGraphControl3;
-        private System.Windows.Forms.Button buttonRedraw;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button button2;
     }
 }
 

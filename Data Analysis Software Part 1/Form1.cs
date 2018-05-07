@@ -36,8 +36,21 @@ namespace Data_Analysis_Software_Part_2
         int powerMaximumRange = 0;
         decimal distanceTotalRange = 0;
         bool distanceCalculationFlagRange = false;
+        LineItem speedCurve1;
+        LineItem cadenceCurve1;
+        LineItem altitudeCurve1;
+        LineItem heartRateCurve1;
+        LineItem powerCurve1;
+        LineItem speedCurve2;
+        LineItem cadenceCurve2;
+        LineItem altitudeCurve2;
+        LineItem heartRateCurve2;
+        LineItem powerCurve2;
         LineItem powerCurveComparison1;
         LineItem powerCurveComparison2;
+        GraphPane myPane1;
+        GraphPane myPane2;
+        GraphPane myPane3;
         //double timeBetween = 0;
         List<double> timeBetweenList = new List<double>();
 
@@ -74,6 +87,11 @@ namespace Data_Analysis_Software_Part_2
             textBoxSPEndS2.Enabled = false;
             textBoxSPEndS3.Enabled = false;
             textBoxSPEndS4.Enabled = false;
+
+            button1.Enabled = false;
+            button2.Enabled = false;
+            setFTPButton.Enabled = false;
+            setBPMButton.Enabled = false;
 
             zedGraphControl1.IsShowPointValues = true;
             zedGraphControl1.PointValueEvent += new ZedGraph.ZedGraphControl.PointValueHandler(zedGraphControl1_PointValueEvent);
@@ -185,7 +203,7 @@ namespace Data_Analysis_Software_Part_2
 
                         try
                         {
-                            if (hRMFile.sModePowerLeftRightBalance == true || hRMFile.sModePowerPedallingIndex == true)
+                            if (hRMFile.sModePowerLeftRightBalance == true && hRMFile.sModePowerPedallingIndex == true)
                             { hRMFile.powerBalancePedallingIndexList.Add(Int32.Parse(lineArray[5])); }
 
                             if (hRMFile.sModePowerLeftRightBalance == true) { hRMFile.powerLeftRightBalanceList.Add(1); }
@@ -237,8 +255,9 @@ namespace Data_Analysis_Software_Part_2
                     if (heartRateTrackBar.Value == 0)      { heartRateValue = hRMFile.heartRateList[i].ToString(); }
                     else if (heartRateTrackBar.Value == 1) { heartRateValue = Math.Round(hRMFile.heartRatePercentageList[i], 2).ToString();  }
                 }
+
                 try { dataGridView.Rows.Add(hRMFile.timeList[i], heartRateValue, speedValue, cadenceValue, altitudeValue, powerValue, hRMFile.powerBalancePedallingIndexList[i]); }
-                catch (ArgumentOutOfRangeException) { Console.WriteLine("ArgumentOutOfRangeException"); }
+                catch (ArgumentOutOfRangeException) { Console.WriteLine(i+ "-ArgumentOutOfRangeException"); }
                 dataGridView.Rows.Add(hRMFile.timeList[i], heartRateValue, speedValue, cadenceValue, altitudeValue, powerValue);
             }
             //Console.WriteLine("AddRows()");
@@ -437,28 +456,24 @@ namespace Data_Analysis_Software_Part_2
         /// </summary>
         private void PlotGraph1()
         {
-            //Console.WriteLine(1);
-            
+
             zedGraphControl1.GraphPane.CurveList.Clear();
             zedGraphControl1.GraphPane.GraphObjList.Clear();
-            GraphPane myPane1 = zedGraphControl1.GraphPane;
+            myPane1 = zedGraphControl1.GraphPane;
             myPane1.YAxisList.Clear();
 
-
-            //Console.WriteLine(2);
             PointPairList speedPairList = new PointPairList();
             PointPairList cadencePairList = new PointPairList();
             PointPairList altitudePairList = new PointPairList();
             PointPairList heartRatePairList = new PointPairList();
             PointPairList powerPairList = new PointPairList();
 
-            /*
-            PointPairList speedPairListC = new PointPairList();
-            PointPairList cadencePairListC = new PointPairList();
-            PointPairList altitudePairListC = new PointPairList();
-            PointPairList heartRatePairListC = new PointPairList();
-            PointPairList powerPairListC = new PointPairList();
-            */
+                PointPairList speedPairListC = new PointPairList();
+                PointPairList cadencePairListC = new PointPairList();
+                PointPairList altitudePairListC = new PointPairList();
+                PointPairList heartRatePairListC = new PointPairList();
+                PointPairList powerPairListC = new PointPairList();
+
 
             DateTime dtStart = initialFile.startDate;
             XDate xDateStart = new XDate(dtStart);
@@ -472,7 +487,7 @@ namespace Data_Analysis_Software_Part_2
             myPane1.XAxis.Scale.Format = "HH:mm:ss";
             myPane1.XAxis.Scale.MajorUnit = DateUnit.Minute;
             myPane1.XAxis.Scale.MinorUnit = DateUnit.Minute;
-         
+
 
             var y1 = myPane1.AddYAxis("Speed");
             var y2 = myPane1.AddYAxis("Cadence");
@@ -482,7 +497,7 @@ namespace Data_Analysis_Software_Part_2
 
 
             Console.WriteLine(3);
-            for (int i = 0; i < initialFile.timeSecs / initialFile.interval ; i++)
+            for (int i = 0; i < initialFile.timeSecs / initialFile.interval; i++)
             {
                 DateTime dtLoop = initialFile.startDate.AddSeconds(i);
                 XDate xDateLoop = new XDate(dtLoop);
@@ -492,7 +507,7 @@ namespace Data_Analysis_Software_Part_2
                 heartRatePairList.Add(xDateLoop, initialFile.heartRateList[i]);
                 powerPairList.Add(xDateLoop, initialFile.powerList[i]);
             }
-            /*
+
             if (compareFile != null)
             {
                 Console.WriteLine("compareFile not null");
@@ -508,60 +523,60 @@ namespace Data_Analysis_Software_Part_2
                 }
                 Console.WriteLine("compareFile graph complete");
             }
-            */
-            //Console.WriteLine(4);
+
 
             myPane1.YAxis.Color = Color.Gray;
-            //myPane1.YAxis.Title.FontSpec.Size = 6;
 
-            LineItem speedCurve = myPane1.AddCurve("Speed 1 (KM/H)",
+            speedCurve1 = myPane1.AddCurve("File 1 Speed (KM/H)",
                    speedPairList, Color.Red, SymbolType.None);
-            speedCurve.YAxisIndex = y1;
+            speedCurve1.YAxisIndex = y1;
 
-            LineItem cadenceCurve = myPane1.AddCurve("Cadence 1 (RPM)",
+            cadenceCurve1 = myPane1.AddCurve("File 1 Cadence (RPM)",
                   cadencePairList, Color.Green, SymbolType.None);
-            cadenceCurve.YAxisIndex = y2;
+            cadenceCurve1.YAxisIndex = y2;
 
-            LineItem altitudeCurve = myPane1.AddCurve("Altitude 1 (M)",
+            altitudeCurve1 = myPane1.AddCurve("File 1 Altitude (M)",
                   altitudePairList, Color.Gray, SymbolType.None);
-            altitudeCurve.YAxisIndex = y3;
+            altitudeCurve1.YAxisIndex = y3;
 
-            LineItem heartRateCurve = myPane1.AddCurve("Heart Rate 1 (BPM)",
+            heartRateCurve1 = myPane1.AddCurve("File 1 Heart Rate (BPM)",
                   heartRatePairList, Color.Purple, SymbolType.None);
-            heartRateCurve.YAxisIndex = y4;
+            heartRateCurve1.YAxisIndex = y4;
 
-            LineItem powerCurve = myPane1.AddCurve("Power 1 (W)",
+            powerCurve1 = myPane1.AddCurve("File 1 Power (W)",
                   powerPairList, Color.Orange, SymbolType.None);
-            powerCurve.YAxisIndex = y5;
+            powerCurve1.YAxisIndex = y5;
 
-            /*
+            if (compareFile != null)
+            {
+
+                speedCurve2 = myPane1.AddCurve("File 2 Speed (KM/H)",
+                       speedPairListC, Color.Red, SymbolType.None);
+                speedCurve2.YAxisIndex = y1;
+
+                cadenceCurve2 = myPane1.AddCurve("File 2 Cadence (RPM)",
+                      cadencePairListC, Color.Green, SymbolType.None);
+                cadenceCurve2.YAxisIndex = y2;
+
+                altitudeCurve2 = myPane1.AddCurve("File 2 Altitude (M)",
+                      altitudePairListC, Color.Gray, SymbolType.None);
+                altitudeCurve2.YAxisIndex = y3;
+
+                heartRateCurve2 = myPane1.AddCurve("File 2 Heart Rate (BPM)",
+                      heartRatePairListC, Color.Purple, SymbolType.None);
+                heartRateCurve2.YAxisIndex = y4;
+
+                powerCurve2 = myPane1.AddCurve("File 2 Power (W)",
+                      powerPairListC, Color.Orange, SymbolType.None);
+                powerCurve2.YAxisIndex = y5;
+
+            }
             
-            LineItem speedCurveC = myPane1.AddCurve("Speed 2 (KM/H)",
-                   speedPairListC, Color.Red, SymbolType.None);
-            speedCurveC.YAxisIndex = y1;
-
-            LineItem cadenceCurveC = myPane1.AddCurve("Cadence 2 (RPM)",
-                  cadencePairListC, Color.Green, SymbolType.None);
-            cadenceCurveC.YAxisIndex = y2;
-
-            LineItem altitudeCurveC = myPane1.AddCurve("Altitude 2 (M)",
-                  altitudePairListC, Color.Gray, SymbolType.None);
-            altitudeCurveC.YAxisIndex = y3;
-
-            LineItem heartRateCurveC = myPane1.AddCurve("Heart Rate 2 (BPM)",
-                  heartRatePairListC, Color.Purple, SymbolType.None);
-            heartRateCurveC.YAxisIndex = y4;
-
-            LineItem powerCurveC = myPane1.AddCurve("Power 2 (W)",
-                  powerPairListC, Color.Orange, SymbolType.None);
-            powerCurveC.YAxisIndex = y5;
-
-            */
 
             zedGraphControl1.AxisChange();
             zedGraphControl1.Refresh();
 
-            //Console.WriteLine("PlotGraph1()");
+            Console.WriteLine("PlotGraph1()");
         }
 
 
@@ -574,7 +589,7 @@ namespace Data_Analysis_Software_Part_2
             {
                 zedGraphControl2.GraphPane.CurveList.Clear();
                 zedGraphControl2.GraphPane.GraphObjList.Clear();
-                GraphPane myPane2 = zedGraphControl2.GraphPane;
+                myPane2 = zedGraphControl2.GraphPane;
 
                 myPane2.Title.Text = "";
                 myPane2.XAxis.Title.Text = "Time (Seconds)";
@@ -598,7 +613,7 @@ namespace Data_Analysis_Software_Part_2
                 zedGraphControl2.AxisChange();
                 zedGraphControl2.Refresh();
 
-                //Console.WriteLine("PlotGraph2()");
+                Console.WriteLine("PlotGraph2()");
             }
             catch (Exception)
             {
@@ -608,174 +623,78 @@ namespace Data_Analysis_Software_Part_2
 
         private void PlotGraph3()
         {
-            //Console.WriteLine(1);
-
             zedGraphControl3.GraphPane.CurveList.Clear();
             zedGraphControl3.GraphPane.GraphObjList.Clear();
-            GraphPane myPane3 = zedGraphControl3.GraphPane;
+            myPane3 = zedGraphControl3.GraphPane;
             myPane3.YAxisList.Clear();
 
-
-            //Console.WriteLine(2);
-            //PointPairList speedPairList = new PointPairList();
-            //PointPairList cadencePairList = new PointPairList();
-            //PointPairList altitudePairList = new PointPairList();
-            //PointPairList heartRatePairList = new PointPairList();
             PointPairList powerPairList = new PointPairList();
-
-
-            //PointPairList speedPairListC = new PointPairList();
-            //PointPairList cadencePairListC = new PointPairList();
-            //PointPairList altitudePairListC = new PointPairList();
-            //PointPairList heartRatePairListC = new PointPairList();
             PointPairList powerPairListC = new PointPairList();
 
-
-            //DateTime dtStart = initialFile.startDate;
-            //XDate xDateStart = new XDate(dtStart);
-            //XDate xDateEnd = new XDate(dtStart.AddSeconds(initialFile.timeSecs));
             myPane3.XAxis.Scale.Min = 0;
             myPane3.XAxis.Scale.Max = Convert.ToDouble(initialFile.distanceTotal);
 
             myPane3.Title.Text = "";
-            //myPane3.XAxis.Type = AxisType.Date;
             myPane3.XAxis.Title.Text = "Distance";
-            //myPane3.XAxis.Scale.Format = "HH:mm:ss";
-            //myPane3.XAxis.Scale.MajorUnit = DateUnit.Minute;
-            //myPane3.XAxis.Scale.MinorUnit = DateUnit.Minute;
-
-
-            //var y1 = myPane3.AddYAxis("Speed");
-            //var y2 = myPane3.AddYAxis("Cadence");
-            //var y3 = myPane3.AddYAxis("Altitude");
-            //var y4 = myPane3.AddYAxis("Heart Rate");
             var y5 = myPane3.AddYAxis("Power");
 
-
-            //Console.WriteLine(3);
-
             int i = 0;
-            //decimal lastDistance = 0;
-            //bool newLastDistance = true;
             decimal distanceBetween=0;
             double speedBetween=0;
 
-            //bool firstCount = true;
 
-            foreach (decimal value in initialFile.cummalativeDistanceList)
-            {
-
-
-
-
-                try
+            if (compareFile != null) {
+                foreach (decimal value in initialFile.cummalativeDistanceList)
                 {
-                    if (initialFile.cummalativeDistanceList[i] >= compareFile.cummalativeDistanceList[i])
+
+
+                    try
                     {
-                        distanceBetween = initialFile.cummalativeDistanceList[i] - compareFile.cummalativeDistanceList[i];
+                        if (initialFile.cummalativeDistanceList[i] >= compareFile.cummalativeDistanceList[i])
+                        {
+                            distanceBetween = initialFile.cummalativeDistanceList[i] - compareFile.cummalativeDistanceList[i];
+                        }
+                        else
+                        {
+                            distanceBetween = compareFile.cummalativeDistanceList[i] - initialFile.cummalativeDistanceList[i];
+                        }
+                        if (initialFile.speedList[i] >= compareFile.speedList[i])
+                        {
+                            speedBetween = (initialFile.speedList[i] - compareFile.speedList[i]) / 10;
+                        }
+                        else
+                        {
+                            speedBetween = (compareFile.speedList[i] - initialFile.speedList[i]) / 10;
+                        }
+                        if ((Convert.ToDouble(distanceBetween) > 1 && speedBetween > 1))
+                        {
+                            timeBetweenList.Add((Convert.ToDouble(distanceBetween) / speedBetween));
+                        }
+
+
+                        powerPairList.Add(Convert.ToDouble(value), initialFile.powerList[i]);
+                        powerPairListC.Add(Convert.ToDouble(value), compareFile.powerList[i]);
+                        
+                        powerPairList.Add(Convert.ToDouble(value), initialFile.powerList[i]);
+                        powerPairListC.Add(Convert.ToDouble(value), compareFile.powerList[i]);
                     }
-                    else
-                    {
-                        distanceBetween = compareFile.cummalativeDistanceList[i] - initialFile.cummalativeDistanceList[i];
-                    }
-                    if (initialFile.speedList[i] >= compareFile.speedList[i])
-                    {
-                        speedBetween = (initialFile.speedList[i] - compareFile.speedList[i]) / 10;
-                    }
-                    else
-                    {
-                        speedBetween = (compareFile.speedList[i] - initialFile.speedList[i]) / 10;
-                    }
-                    if ((Convert.ToDouble(distanceBetween) > 1 && speedBetween > 1)) 
-                    {
-                        timeBetweenList.Add((Convert.ToDouble(distanceBetween) / speedBetween));
-                    }
+                    catch (System.ArgumentOutOfRangeException) { }
 
-                    Console.WriteLine(i + "--------------------------------------------------------");
-                    Console.WriteLine("distanceBetween = " + distanceBetween);
-                    Console.WriteLine("speedBetween = " + speedBetween);
-                    Console.WriteLine("--------------------------------------------------------");
-
-                    //timeDifferenceCounter = (timeDifferenceCounter - temp);
-                    //if (temp < timeDifferenceCounter)
-                    //{
-                    //timeDifferenceCounter = (timeDifferenceCounter - temp);
-                    //Console.WriteLine("oo timeDifferenceCounter: " + timeDifferenceCounter);
-                    //Console.WriteLine("---------------------------------------------------------");
-                    //}
-
-
-                    //speedPairList.Add(Convert.ToDouble(total), (initialFile.speedList[i] / 10));
-                    //cadencePairList.Add(Convert.ToDouble(total), initialFile.cadenceList[i]);
-                    //altitudePairList.Add(Convert.ToDouble(total), initialFile.altitudeList[i]);
-                    //heartRatePairList.Add(Convert.ToDouble(total), initialFile.heartRateList[i]);
-                    powerPairList.Add(Convert.ToDouble(value), initialFile.powerList[i]);
-                    powerPairListC.Add(Convert.ToDouble(value), compareFile.powerList[i]);
-
-
-                    Console.WriteLine(i + "--------------------------------------------------------");
-                    Console.WriteLine("timeBetween = " + timeBetweenList[i]);
-                    Console.WriteLine("---------------------------------------------------------");
-
-
-                    powerPairList.Add(Convert.ToDouble(value), initialFile.powerList[i]);
-                    powerPairListC.Add(Convert.ToDouble(value), compareFile.powerList[i]);
+                    i++;
                 }
-                catch (System.ArgumentOutOfRangeException) { }
-
-                i++;
-
 
             }
            
-            //Console.WriteLine(4);
+
 
             myPane3.YAxis.Color = Color.Gray;
-            //myPane1.YAxis.Title.FontSpec.Size = 6;
 
-            /*
-            LineItem speedCurve = myPane3.AddCurve("Speed 1 (KM/H)",
-                   speedPairList, Color.Red, SymbolType.None);
-            speedCurve.YAxisIndex = y1;
 
-            LineItem cadenceCurve = myPane3.AddCurve("Cadence 1 (RPM)",
-                  cadencePairList, Color.Green, SymbolType.None);
-            cadenceCurve.YAxisIndex = y2;
-
-            LineItem altitudeCurve = myPane3.AddCurve("Altitude 1 (M)",
-                  altitudePairList, Color.Gray, SymbolType.None);
-            altitudeCurve.YAxisIndex = y3;
-
-            LineItem heartRateCurve = myPane3.AddCurve("Heart Rate 1 (BPM)",
-                  heartRatePairList, Color.Purple, SymbolType.None);
-            heartRateCurve.YAxisIndex = y4;
-
-            */
-
-            powerCurveComparison1 = myPane3.AddCurve("Power 1 (W)",
+            powerCurveComparison1 = myPane3.AddCurve("File 1 (W)",
                   powerPairList, Color.Red, SymbolType.None);
             powerCurveComparison1.YAxisIndex = y5;
 
-            /*
-            
-            LineItem speedCurveC = myPane1.AddCurve("Speed 2 (KM/H)",
-                   speedPairListC, Color.Red, SymbolType.None);
-            speedCurveC.YAxisIndex = y1;
-
-            LineItem cadenceCurveC = myPane1.AddCurve("Cadence 2 (RPM)",
-                  cadencePairListC, Color.Green, SymbolType.None);
-            cadenceCurveC.YAxisIndex = y2;
-
-            LineItem altitudeCurveC = myPane1.AddCurve("Altitude 2 (M)",
-                  altitudePairListC, Color.Gray, SymbolType.None);
-            altitudeCurveC.YAxisIndex = y3;
-
-            LineItem heartRateCurveC = myPane1.AddCurve("Heart Rate 2 (BPM)",
-                  heartRatePairListC, Color.Purple, SymbolType.None);
-            heartRateCurveC.YAxisIndex = y4;
-            */
-
-            powerCurveComparison2 = myPane3.AddCurve("Power 2 (W)",
+            powerCurveComparison2 = myPane3.AddCurve("File 2 Power (W)",
                   powerPairListC, Color.Blue, SymbolType.None);
             powerCurveComparison2.YAxisIndex = y5;
 
@@ -784,7 +703,7 @@ namespace Data_Analysis_Software_Part_2
             zedGraphControl3.AxisChange();
             zedGraphControl3.Refresh();
 
-            //Console.WriteLine("PlotGraph3()");
+            Console.WriteLine("PlotGraph3()");
         }
 
         private void SetSize()
@@ -831,6 +750,9 @@ namespace Data_Analysis_Software_Part_2
                         else if (initialFile.sModeUnitStandard == true) { measurementTrackBar.Value = 1; }
                         PlotGraph1();
                         //PlotGraph3();
+                        setFTPButton.Enabled = true;
+                        setBPMButton.Enabled = true;
+                        button1.Enabled = true;
                     }
                 }
                 catch (Exception ex)
@@ -860,7 +782,10 @@ namespace Data_Analysis_Software_Part_2
                         Read(compareFile);
                         //Thread.Sleep(500);
                         if (compareFile.sModeUnitStandard != initialFile.sModeUnitStandard) { MessageBox.Show("Error: files use different measurement systems."); }
-                        //PlotGraph1(compareFile);
+                        PlotGraph1();
+                        PlotGraph3();
+                        button2.Enabled = true;
+                        button1.Enabled = false;
                     }
                 }
                 catch (Exception ex)
@@ -1392,7 +1317,63 @@ namespace Data_Analysis_Software_Part_2
 
         string zedGraphControl1_PointValueEvent(ZedGraph.ZedGraphControl sender, ZedGraph.GraphPane pane, ZedGraph.CurveItem curve, int iPt)
         {
-            return "Name = " + curve.Label.Text + " X = " + curve[iPt].X.ToString() + " Y = " + curve[iPt].Y.ToString();
+            string value = "";
+
+            double distanceBetween = 0;
+
+
+            if (curve == speedCurve1)
+            {
+                value = DistanceCompare(pane, iPt, 1);
+            }
+    
+            if (curve == cadenceCurve1)
+            {
+                value = DistanceCompare(pane, iPt, 1);
+            }
+
+            if (curve == altitudeCurve1)
+            {
+                value = DistanceCompare(pane, iPt, 1);
+            }
+
+            if (curve == heartRateCurve1)
+            {
+                value = DistanceCompare(pane, iPt, 1);
+            }
+
+            if (curve == powerCurve1)
+            {
+                value = DistanceCompare(pane, iPt, 1);
+            }
+
+            if (curve == speedCurve2)
+            {
+                value = DistanceCompare(pane, iPt, 2);
+            }
+
+            if (curve == cadenceCurve2)
+            {
+                value = DistanceCompare(pane, iPt, 2);
+            }
+
+            if (curve == altitudeCurve2)
+            {
+                value = DistanceCompare(pane, iPt, 2);
+            }
+
+            if (curve == heartRateCurve2)
+            {
+                value = DistanceCompare(pane, iPt, 2);
+            }
+
+            if (curve == powerCurve2)
+            {
+                value = DistanceCompare(pane, iPt, 2);
+            }
+                       
+            Console.WriteLine(value+distanceBetween);
+            return curve.Label.Text + ": " + curve[iPt].Y.ToString() + " Distance: " + value;
         }
 
         private string zedGraphControl3_PointValueEvent(ZedGraphControl sender, GraphPane pane, CurveItem curve, int iPt)
@@ -1402,36 +1383,56 @@ namespace Data_Analysis_Software_Part_2
             {
                 if (curve == powerCurveComparison1)
                 {
-                    if (initialFile.speedList[iPt] >= compareFile.speedList[iPt])
-                    {
-                        value = "+";
-                    }
-                    else if (compareFile.speedList[iPt] >= initialFile.speedList[iPt])
-                    {
-                        value = "-";
-                    }
+                    value = DistanceCompare(pane, iPt, 1);
                 }
                 else if (curve == powerCurveComparison2)
                 {
-                    if (initialFile.speedList[iPt] >= compareFile.speedList[iPt])
-                    {
-                        value = "-";
-                    }
-                    else if (compareFile.speedList[iPt] >= initialFile.speedList[iPt])
-                    {
-                        value = "+";
-                    }
+                    value = DistanceCompare(pane, iPt, 2);
                 }
             }catch (System.ArgumentOutOfRangeException) { }
 
-            return "Name = " + curve.Label.Text + " X = " + curve[iPt].X.ToString() + " Y = " + curve[iPt].Y.ToString() + " Time Difference = " + value + timeBetweenList[iPt] + "s";
+            return "Distance = " + curve[iPt].X.ToString() + curve.Label.Text + " = " + curve[iPt].Y.ToString() + " Time Difference = " + value + timeBetweenList[iPt] + "s";
         }
 
-        private void buttonRedraw_Click(object sender, EventArgs e)
+
+        private void button2_Click(object sender, EventArgs e)
         {
+            compareFile = null;
             PlotGraph1();
             PlotGraph2();
             PlotGraph3();
+            button1.Enabled = true;
+            button2.Enabled = false;
+        }
+
+        public string DistanceCompare(GraphPane pane, int iPt, int x)
+        {
+            string value = "";
+            string sign = "";
+            try
+            {
+                if (initialFile.cummalativeDistanceList[iPt] > compareFile.cummalativeDistanceList[iPt])
+                {
+                    if (x == 1) { sign = "+"; }
+                    else if (x == 2) { sign = "-"; }
+                    if (pane == myPane1) { value = sign + Convert.ToString(initialFile.cummalativeDistanceList[iPt] - compareFile.cummalativeDistanceList[iPt]); }
+                    if (pane == myPane3) { value = sign; }
+                }
+                else if (compareFile.cummalativeDistanceList[iPt] > initialFile.cummalativeDistanceList[iPt])
+                {
+                    if (x == 1) { sign = "-"; }
+                    else if (x == 2) { sign = "+"; }
+                    if (pane == myPane1) { value = sign + Convert.ToString(compareFile.cummalativeDistanceList[iPt] - initialFile.cummalativeDistanceList[iPt]); }
+                    if (pane == myPane3) { value = sign; }
+                }
+                else if (compareFile.cummalativeDistanceList[iPt] == initialFile.cummalativeDistanceList[iPt])
+                {
+                    value = "0";
+                }
+            }
+            catch (System.ArgumentOutOfRangeException) { }
+            catch (System.NullReferenceException) { }
+            return value;
         }
     }
 }
