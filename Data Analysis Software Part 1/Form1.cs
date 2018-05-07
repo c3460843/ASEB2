@@ -16,13 +16,41 @@ namespace Data_Analysis_Software_Part_2
 {
     public partial class Form1 : Form
     {
+        /// <summary>
+        /// The first file that is loaded.
+        /// </summary>
         HRMFile initialFile;
+
+        /// <summary>
+        /// The second (comparison) file that is loaded.
+        /// </summary>
         HRMFile compareFile;
+
         Stream myStream = null;
+
+        /// <summary>
+        /// Stores the value for how many sections the user has added.
+        /// </summary>
         int checkCount = 0;
+
+        /// <summary>
+        /// The value for the Functional Threshold Power that the user sets.
+        /// </summary>
         int userSetFTP = 0;
+
+        /// <summary>
+        /// The value for the maximum heart rate that the user sets.
+        /// </summary>
         int userSetHeartRateMaximum = 0;
+
+        /// <summary>
+        /// Stores the corresponding value for which tickbox is active.
+        /// </summary>
         int tickBoxValue = 0;
+
+        /// <summary>
+        /// Stores the value for how many sections the user has added.
+        /// </summary>
         int portionValue = 0;
 
         double speedTotalRange = 0;
@@ -36,6 +64,7 @@ namespace Data_Analysis_Software_Part_2
         int powerMaximumRange = 0;
         decimal distanceTotalRange = 0;
         bool distanceCalculationFlagRange = false;
+
         LineItem speedCurve1;
         LineItem cadenceCurve1;
         LineItem altitudeCurve1;
@@ -48,11 +77,30 @@ namespace Data_Analysis_Software_Part_2
         LineItem powerCurve2;
         LineItem powerCurveComparison1;
         LineItem powerCurveComparison2;
+
+        /// <summary>
+        /// Overall graph.
+        /// </summary>
         GraphPane myPane1;
+
+        /// <summary>
+        /// Percentage graph.
+        /// </summary>
         GraphPane myPane2;
+
+        /// <summary>
+        /// Distance graph.
+        /// </summary>
         GraphPane myPane3;
-        //double timeBetween = 0;
+
+        /// <summary>
+        /// Array list that stores the time between each interval of the first and second HRMFiles using the distance and speed.
+        /// </summary>
         List<double> timeBetweenList = new List<double>();
+
+        double normalisedPower = 0;
+        int normalisationCounter = 0;
+        double[] rollingAverage = new double[29]; 
 
         public Form1()
         {
@@ -94,15 +142,16 @@ namespace Data_Analysis_Software_Part_2
             setBPMButton.Enabled = false;
 
             zedGraphControl1.IsShowPointValues = true;
-            zedGraphControl1.PointValueEvent += new ZedGraph.ZedGraphControl.PointValueHandler(zedGraphControl1_PointValueEvent);
+            zedGraphControl1.PointValueEvent += new ZedGraph.ZedGraphControl.PointValueHandler(ZedGraphControl1_PointValueEvent);
 
             zedGraphControl3.IsShowPointValues = true;
-            zedGraphControl3.PointValueEvent += new ZedGraph.ZedGraphControl.PointValueHandler(zedGraphControl3_PointValueEvent);
+            zedGraphControl3.PointValueEvent += new ZedGraph.ZedGraphControl.PointValueHandler(ZedGraphControl3_PointValueEvent);
         }
 
         /// <summary>
-        /// Reads the file then splits line by line into lists of data.
+        /// Reads the file then splits line by line into lists of data from specific HRMFile.
         /// </summary>
+        /// <param name="hRMFile"></param>
         public void Read(HRMFile hRMFile)
         {
             string line;
@@ -148,19 +197,28 @@ namespace Data_Analysis_Software_Part_2
                     String[] lineArray = line.Split('=');
                     DateTime d = DateTime.ParseExact(lineArray[1], "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture);
                     hRMFile.startDate = d;
-                    dateLabel.Text = d.ToString("dd/MM/yyyy");
+                    if (hRMFile == initialFile)
+                    {
+                        dateLabel.Text = d.ToString("dd/MM/yyyy");
+                    }
                 }
 
                 if (line.Contains("StartTime"))
                 {
-                    String[] lineArray = line.Split('=');
-                    startTimeLabel.Text = lineArray[1];
+                    if (hRMFile == initialFile)
+                    {
+                        String[] lineArray = line.Split('=');
+                        startTimeLabel.Text = lineArray[1];
+                    }
                 }
 
                 if (line.Contains("Interval"))
                 {
                     String[] lineArray = line.Split('=');
-                    intervalLabel.Text = lineArray[1] + "s";
+                    if (hRMFile == initialFile)
+                    {
+                        intervalLabel.Text = lineArray[1] + "s";
+                    }
                     hRMFile.interval = Int32.Parse(lineArray[1]);
                 }
 
@@ -175,7 +233,6 @@ namespace Data_Analysis_Software_Part_2
                     if (!line.Contains("HRData"))
                     {
                         //Console.WriteLine(line);
-
                         hRMFile.timeSecs += hRMFile.interval;
                         string timeString = timeSpan.ToString(@"hh\:mm\:ss");
                         String[] lineArray = line.Split();
@@ -231,10 +288,12 @@ namespace Data_Analysis_Software_Part_2
 
 
         /// <summary>
-        /// Adds rows of data from lists to a data grid.       
+        /// Adds rows of data from lists to a data grid from a specific HRMFile.
         /// </summary>
+        /// <param name="hRMFile"></param>
         private void AddRows(HRMFile hRMFile)
         {
+            double total = 0;
             for (int i = 0; i < hRMFile.timeList.Count; i++)
             {
                 string speedValue="";
@@ -247,6 +306,42 @@ namespace Data_Analysis_Software_Part_2
                 if (hRMFile.sModeAltitude ==true) { altitudeValue = hRMFile.altitudeList[i].ToString(); }
                 if (hRMFile.sModePower == true)
                 {
+                    Console.WriteLine(i + "-----------------------------------------------------");
+                    Console.WriteLine("here");
+                    Console.WriteLine(normalisationCounter);
+                    if (i >= 29)
+                    {
+                        if (normalisationCounter == 29) { normalisationCounter = 0; }
+
+                        if (hRMFile.powerList[i] == 0)
+                        {
+                            rollingAverage[normalisationCounter] = 0;
+                        }
+                        else
+                        {
+                            rollingAverage[normalisationCounter] = Math.Pow((hRMFile.powerList[i]), 4.00);
+                        }
+       
+                    Console.WriteLine("power of: " + hRMFile.powerList[i] + " / " + Math.Pow((hRMFile.powerList[i]), 4.00));
+
+                    normalisationCounter++;
+
+                    foreach (double value in rollingAverage)
+                    {
+                        total += value;
+                        //Console.WriteLine("total: " + total);
+                    }
+
+
+                        double average = total / 30;
+                        normalisedPower = Math.Pow(average, 1.0 / 4);
+                        total = 0;
+                    }
+
+                    hRMFile.normalisedPowerList.Add(Math.Round(normalisedPower, 0));
+                    Console.WriteLine("normalised power: " + normalisedPower);
+                    Console.WriteLine(i + "-----------------------------------------------------");
+
                     if (powerTrackBar.Value == 0)      { powerValue = hRMFile.powerList[i].ToString();  }
                     else if (powerTrackBar.Value == 1) { powerValue = Math.Round(hRMFile.powerPercentageList[i], 2).ToString();  }
                 }
@@ -256,16 +351,18 @@ namespace Data_Analysis_Software_Part_2
                     else if (heartRateTrackBar.Value == 1) { heartRateValue = Math.Round(hRMFile.heartRatePercentageList[i], 2).ToString();  }
                 }
 
-                try { dataGridView.Rows.Add(hRMFile.timeList[i], heartRateValue, speedValue, cadenceValue, altitudeValue, powerValue, hRMFile.powerBalancePedallingIndexList[i]); }
-                catch (ArgumentOutOfRangeException) { Console.WriteLine(i+ "-ArgumentOutOfRangeException"); }
-                dataGridView.Rows.Add(hRMFile.timeList[i], heartRateValue, speedValue, cadenceValue, altitudeValue, powerValue);
+                try { dataGridView.Rows.Add(hRMFile.timeList[i], heartRateValue, speedValue, cadenceValue, altitudeValue, powerValue, hRMFile.normalisedPowerList[i], hRMFile.powerBalancePedallingIndexList[i]); }
+                catch (ArgumentOutOfRangeException)
+                {
+                    dataGridView.Rows.Add(hRMFile.timeList[i], heartRateValue, speedValue, cadenceValue, altitudeValue, powerValue, hRMFile.normalisedPowerList[i]);
+                }
             }
-            //Console.WriteLine("AddRows()");
         }
 
         /// <summary>
-        /// Calculates all the averages, minimums and maximums from the lists.
+        /// Calculates all the averages, minimums and maximums from the lists from a spefic HRMFile.
         /// </summary>
+        /// <param name="hRMFile"></param>
         private void Calculate(HRMFile hRMFile)
         {
             hRMFile.speedTotal = 0;
@@ -359,8 +456,11 @@ namespace Data_Analysis_Software_Part_2
 
 
         /// <summary>
-        /// Calculates all the averages from a user specified portion.
+        /// Calculates all the averages from a user specified portion using min and max set by user.
         /// </summary>
+        /// <param name="hRMfile"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
         private void CalculatePortion(HRMFile hRMfile, int min, int max)
         {
 
@@ -621,6 +721,9 @@ namespace Data_Analysis_Software_Part_2
             }
         }
 
+        /// <summary>
+        /// Plots the zedGraph for the graph with distance as x-axis.
+        /// </summary>
         private void PlotGraph3()
         {
             zedGraphControl3.GraphPane.CurveList.Clear();
@@ -639,11 +742,12 @@ namespace Data_Analysis_Software_Part_2
             var y5 = myPane3.AddYAxis("Power");
 
             int i = 0;
-            decimal distanceBetween=0;
-            double speedBetween=0;
+            decimal distanceBetween = 0;
+            double speedBetween = 0;
 
 
-            if (compareFile != null) {
+            if (compareFile != null)
+            {
                 foreach (decimal value in initialFile.cummalativeDistanceList)
                 {
 
@@ -674,9 +778,6 @@ namespace Data_Analysis_Software_Part_2
 
                         powerPairList.Add(Convert.ToDouble(value), initialFile.powerList[i]);
                         powerPairListC.Add(Convert.ToDouble(value), compareFile.powerList[i]);
-                        
-                        powerPairList.Add(Convert.ToDouble(value), initialFile.powerList[i]);
-                        powerPairListC.Add(Convert.ToDouble(value), compareFile.powerList[i]);
                     }
                     catch (System.ArgumentOutOfRangeException) { }
 
@@ -684,7 +785,7 @@ namespace Data_Analysis_Software_Part_2
                 }
 
             }
-           
+
 
 
             myPane3.YAxis.Color = Color.Gray;
@@ -694,9 +795,12 @@ namespace Data_Analysis_Software_Part_2
                   powerPairList, Color.Red, SymbolType.None);
             powerCurveComparison1.YAxisIndex = y5;
 
-            powerCurveComparison2 = myPane3.AddCurve("File 2 Power (W)",
-                  powerPairListC, Color.Blue, SymbolType.None);
-            powerCurveComparison2.YAxisIndex = y5;
+            if (compareFile != null)
+            {
+                powerCurveComparison2 = myPane3.AddCurve("File 2 Power (W)",
+                      powerPairListC, Color.Blue, SymbolType.None);
+                powerCurveComparison2.YAxisIndex = y5;
+            }
 
             
 
@@ -705,7 +809,10 @@ namespace Data_Analysis_Software_Part_2
 
             Console.WriteLine("PlotGraph3()");
         }
-
+        
+        /// <summary>
+        /// Method for resizing all the graphs.
+        /// </summary>
         private void SetSize()
         {
             zedGraphControl1.Location = new Point(0, 0);
@@ -714,15 +821,23 @@ namespace Data_Analysis_Software_Part_2
             zedGraphControl2.Location = new Point(0, 0);
             zedGraphControl2.IsShowPointValues = true;
             zedGraphControl2.Size = new Size(this.ClientRectangle.Width - 20, this.ClientRectangle.Height - 50);
+            zedGraphControl3.Location = new Point(0, 0);
+            zedGraphControl3.IsShowPointValues = true;
+            zedGraphControl3.Size = new Size(this.ClientRectangle.Width - 20, this.ClientRectangle.Height - 50);
         }
 
+        /// <summary>
+        /// Calls for graphs to resize when the form is resized.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Form1_Resize(object sender, EventArgs e)
         {
             SetSize();
         }
 
         /// <summary>
-        /// Listens for File...Open click, and creates open file dialog.
+        /// Listens for File...Open click, and creates open file dialog for the first file.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -749,7 +864,7 @@ namespace Data_Analysis_Software_Part_2
                         if (initialFile.sModeUnitStandard == false)      { measurementTrackBar.Value = 0; }
                         else if (initialFile.sModeUnitStandard == true) { measurementTrackBar.Value = 1; }
                         PlotGraph1();
-                        //PlotGraph3();
+                        PlotGraph3();
                         setFTPButton.Enabled = true;
                         setBPMButton.Enabled = true;
                         button1.Enabled = true;
@@ -762,6 +877,11 @@ namespace Data_Analysis_Software_Part_2
             }
         }
 
+        /// <summary>
+        /// Listens for File...Open click, and creates open file dialog for the second (comparison) file.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void openCompareToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog2 = new OpenFileDialog();
@@ -783,7 +903,6 @@ namespace Data_Analysis_Software_Part_2
                         //Thread.Sleep(500);
                         if (compareFile.sModeUnitStandard != initialFile.sModeUnitStandard) { MessageBox.Show("Error: files use different measurement systems."); }
                         PlotGraph1();
-                        PlotGraph3();
                         button2.Enabled = true;
                         button1.Enabled = false;
                     }
@@ -985,17 +1104,32 @@ namespace Data_Analysis_Software_Part_2
             PlotGraph2();
         }
 
+        /// <summary>
+        /// Used by exit menu item to exit application.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             System.Windows.Forms.Application.Exit();
         }
 
+        /// <summary>
+        /// Used by about menu item to display a message box with information about the application.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void aboutToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             MessageBox.Show("Created by c3460843 using ZedGraph.");
         }
 
-        private void checkBoxSPAll_CheckedChanged(object sender, EventArgs e)
+        /// <summary>
+        /// Applies the changes linked to the 'All' checkbox.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CheckBoxSPAll_CheckedChanged(object sender, EventArgs e)
         {
             if (checkBoxSPAll.Checked == true)
             {
@@ -1022,7 +1156,12 @@ namespace Data_Analysis_Software_Part_2
             }
         }
 
-        private void checkBoxSP1_CheckedChanged(object sender, EventArgs e)
+        /// <summary>
+        /// Applies the changes linked to the '1' checkbox.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CheckBoxSP1_CheckedChanged(object sender, EventArgs e)
         {
             if (checkBoxSP1.Checked == true)
             {
@@ -1044,7 +1183,12 @@ namespace Data_Analysis_Software_Part_2
             }
         }
 
-        private void checkBoxSP2_CheckedChanged(object sender, EventArgs e)
+        /// <summary>
+        /// Applies the changes linked to the '2' checkbox.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CheckBoxSP2_CheckedChanged(object sender, EventArgs e)
         {
             if (checkBoxSP2.Checked == true)
             {
@@ -1065,7 +1209,12 @@ namespace Data_Analysis_Software_Part_2
             }
         }
 
-        private void checkBoxSP3_CheckedChanged(object sender, EventArgs e)
+        /// <summary>
+        /// Applies the changes linked to the '3' checkbox.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CheckBoxSP3_CheckedChanged(object sender, EventArgs e)
         {
             if (checkBoxSP3.Checked == true)
             {
@@ -1086,7 +1235,12 @@ namespace Data_Analysis_Software_Part_2
             }
         }
 
-        private void checkBoxSP4_CheckedChanged(object sender, EventArgs e)
+        /// <summary>
+        /// Applies the changes linked to the '4' checkbox.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CheckBoxSP4_CheckedChanged(object sender, EventArgs e)
         {
             if (checkBoxSP4.Checked == true)
             {
@@ -1107,6 +1261,11 @@ namespace Data_Analysis_Software_Part_2
             }
         }
 
+        /// <summary>
+        /// Applies the changes linked to the '1' add button.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void buttonAddSP1_Click(object sender, EventArgs e)
         {
             buttonAddSP1.Enabled = false;
@@ -1137,6 +1296,11 @@ namespace Data_Analysis_Software_Part_2
             textBoxSPEndSAll.Text = textBoxSPEndS1.Text;
         }
 
+        /// <summary>
+        /// Applies the changes linked to the '2' add button.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void buttonAddSP2_Click(object sender, EventArgs e)
         {
             buttonAddSP2.Enabled = false;
@@ -1164,6 +1328,11 @@ namespace Data_Analysis_Software_Part_2
             textBoxSPEndSAll.Text = textBoxSPEndS2.Text;
         }
 
+        /// <summary>
+        /// Applies the changes linked to the '3' add button.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void buttonAddSP3_Click(object sender, EventArgs e)
         {
             buttonAddSP3.Enabled = false;
@@ -1191,6 +1360,11 @@ namespace Data_Analysis_Software_Part_2
             textBoxSPEndSAll.Text = textBoxSPEndS3.Text;
         }
 
+        /// <summary>
+        /// Applies the changes linked to the '4' add button.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void buttonAddSP4_Click(object sender, EventArgs e)
         {
             buttonAddSP4.Enabled = false;
@@ -1211,6 +1385,11 @@ namespace Data_Analysis_Software_Part_2
             textBoxSPEndSAll.Text = textBoxSPEndS4.Text;
         }
 
+        /// <summary>
+        /// Applies the changes linked to the '1' remove button.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void buttonRemoveSP1_Click(object sender, EventArgs e)
         {
             buttonAddSP1.Enabled = true;
@@ -1241,6 +1420,11 @@ namespace Data_Analysis_Software_Part_2
             textBoxSPEndSAll.Text = "00";
         }
 
+        /// <summary>
+        /// Applies the changes linked to the '2' remove button.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void buttonRemoveSP2_Click(object sender, EventArgs e)
         {
             buttonAddSP2.Enabled = true;
@@ -1268,6 +1452,11 @@ namespace Data_Analysis_Software_Part_2
             textBoxSPEndSAll.Text = textBoxSPEndS1.Text;
         }
 
+        /// <summary>
+        /// Applies the changes linked to the '3' remove button.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void buttonRemoveSP3_Click(object sender, EventArgs e)
         {
             buttonAddSP3.Enabled = true;
@@ -1295,7 +1484,12 @@ namespace Data_Analysis_Software_Part_2
             textBoxSPEndSAll.Text = textBoxSPEndS2.Text;
         }
 
-        private void buttonRemoveSP4_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Applies the changes linked to the '4' remove button.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ButtonRemoveSP4_Click(object sender, EventArgs e)
         {
             buttonRemoveSP3.Enabled = true;
             buttonRemoveSP4.Enabled = false;
@@ -1315,68 +1509,108 @@ namespace Data_Analysis_Software_Part_2
             textBoxSPEndSAll.Text = textBoxSPEndS3.Text;
         }
 
-        string zedGraphControl1_PointValueEvent(ZedGraph.ZedGraphControl sender, ZedGraph.GraphPane pane, ZedGraph.CurveItem curve, int iPt)
+        /// <summary>
+        /// Alters the data related to graph 1's tooltip.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="pane"></param>
+        /// <param name="curve"></param>
+        /// <param name="iPt"></param>
+        /// <returns></returns>
+        string ZedGraphControl1_PointValueEvent(ZedGraph.ZedGraphControl sender, ZedGraph.GraphPane pane, ZedGraph.CurveItem curve, int iPt)
         {
             string value = "";
+            string difference = "";
+            string op = "";
 
             double distanceBetween = 0;
 
+            try
+            {
+                if (curve == speedCurve1)
+                {
+                    value = DistanceCompare(pane, iPt, 1);
+                    if (initialFile.speedList[iPt] > compareFile.speedList[iPt]) { op = "+"; }
+                    difference = op + (initialFile.speedList[iPt] - compareFile.speedList[iPt]).ToString();
+                }
 
-            if (curve == speedCurve1)
-            {
-                value = DistanceCompare(pane, iPt, 1);
-            }
-    
-            if (curve == cadenceCurve1)
-            {
-                value = DistanceCompare(pane, iPt, 1);
-            }
+                if (curve == cadenceCurve1)
+                {
+                    value = DistanceCompare(pane, iPt, 1);
+                    if (initialFile.cadenceList[iPt] > compareFile.cadenceList[iPt]) { op = "+"; }
+                    difference = op + (initialFile.cadenceList[iPt] - compareFile.cadenceList[iPt]).ToString();
+                }
 
-            if (curve == altitudeCurve1)
-            {
-                value = DistanceCompare(pane, iPt, 1);
-            }
+                if (curve == altitudeCurve1)
+                {
+                    value = DistanceCompare(pane, iPt, 1);
+                    if (initialFile.altitudeList[iPt] > compareFile.altitudeList[iPt]) { op = "+"; }
+                    difference = op + (initialFile.altitudeList[iPt] - compareFile.altitudeList[iPt]).ToString();
+                }
 
-            if (curve == heartRateCurve1)
-            {
-                value = DistanceCompare(pane, iPt, 1);
-            }
+                if (curve == heartRateCurve1)
+                {
+                    value = DistanceCompare(pane, iPt, 1);
+                    if (initialFile.heartRateList[iPt] > compareFile.heartRateList[iPt]) { op = "+"; }
+                    difference = op + (initialFile.heartRateList[iPt] - compareFile.heartRateList[iPt]).ToString();
+                }
 
-            if (curve == powerCurve1)
-            {
-                value = DistanceCompare(pane, iPt, 1);
-            }
+                if (curve == powerCurve1)
+                {
+                    value = DistanceCompare(pane, iPt, 1);
+                    if (initialFile.powerList[iPt] > compareFile.powerList[iPt]) { op = "+"; }
+                    difference = op + (initialFile.powerList[iPt] - compareFile.powerList[iPt]).ToString();
+                }
 
-            if (curve == speedCurve2)
-            {
-                value = DistanceCompare(pane, iPt, 2);
-            }
+                if (curve == speedCurve2)
+                {
+                    value = DistanceCompare(pane, iPt, 2);
+                    if (initialFile.speedList[iPt] < compareFile.speedList[iPt]) { op = "+"; }
+                    difference = op + (compareFile.speedList[iPt] - initialFile.speedList[iPt]).ToString();
+                }
 
-            if (curve == cadenceCurve2)
-            {
-                value = DistanceCompare(pane, iPt, 2);
-            }
+                if (curve == cadenceCurve2)
+                {
+                    value = DistanceCompare(pane, iPt, 2);
+                    if (initialFile.cadenceList[iPt] < compareFile.cadenceList[iPt]) { op = "+"; }
+                    difference = op + (compareFile.cadenceList[iPt] - initialFile.cadenceList[iPt]).ToString();
+                }
 
-            if (curve == altitudeCurve2)
-            {
-                value = DistanceCompare(pane, iPt, 2);
-            }
+                if (curve == altitudeCurve2)
+                {
+                    value = DistanceCompare(pane, iPt, 2);
+                    if (initialFile.altitudeList[iPt] < compareFile.altitudeList[iPt]) { op = "+"; }
+                    difference = op + (compareFile.altitudeList[iPt] - initialFile.altitudeList[iPt]).ToString();
+                }
 
-            if (curve == heartRateCurve2)
-            {
-                value = DistanceCompare(pane, iPt, 2);
-            }
+                if (curve == heartRateCurve2)
+                {
+                    value = DistanceCompare(pane, iPt, 2);
+                    if (initialFile.heartRateList[iPt] < compareFile.heartRateList[iPt]) { op = "+"; }
+                    difference = op + (compareFile.heartRateList[iPt] - initialFile.heartRateList[iPt]).ToString();
+                }
 
-            if (curve == powerCurve2)
-            {
-                value = DistanceCompare(pane, iPt, 2);
-            }
+                if (curve == powerCurve2)
+                {
+                    value = DistanceCompare(pane, iPt, 2);
+                    if (initialFile.powerList[iPt] < compareFile.powerList[iPt]) { op = "+"; }
+                    difference = op + (compareFile.powerList[iPt] - initialFile.powerList[iPt]).ToString();
+                }
+            }catch (System.ArgumentOutOfRangeException) { difference = "N/A"; }
                        
             Console.WriteLine(value+distanceBetween);
-            return curve.Label.Text + ": " + curve[iPt].Y.ToString() + " Distance: " + value;
+            return curve.Label.Text + ": " + curve[iPt].Y.ToString() + "(" + difference + ")" + " Distance Difference: " + value;
         }
 
-        private string zedGraphControl3_PointValueEvent(ZedGraphControl sender, GraphPane pane, CurveItem curve, int iPt)
+        /// <summary>
+        /// Alters the data related to graph 3's tooltip.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="pane"></param>
+        /// <param name="curve"></param>
+        /// <param name="iPt"></param>
+        /// <returns></returns>
+        private string ZedGraphControl3_PointValueEvent(ZedGraphControl sender, GraphPane pane, CurveItem curve, int iPt)
         {
             string value="";
             try
@@ -1389,13 +1623,17 @@ namespace Data_Analysis_Software_Part_2
                 {
                     value = DistanceCompare(pane, iPt, 2);
                 }
-            }catch (System.ArgumentOutOfRangeException) { }
+            }catch (System.ArgumentOutOfRangeException) { value = "N/A"; }
 
             return "Distance = " + curve[iPt].X.ToString() + curve.Label.Text + " = " + curve[iPt].Y.ToString() + " Time Difference = " + value + timeBetweenList[iPt] + "s";
         }
 
-
-        private void button2_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Removes the second (comparison) file, and applies changes related to it.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Button2_Click(object sender, EventArgs e)
         {
             compareFile = null;
             PlotGraph1();
@@ -1405,6 +1643,13 @@ namespace Data_Analysis_Software_Part_2
             button2.Enabled = false;
         }
 
+        /// <summary>
+        /// Compares list cummalitive distance data from lists for both files and returns the operand (+/-) and difference between values using the index (iPt) and the file number related to the curve .
+        /// </summary>
+        /// <param name="pane"></param>
+        /// <param name="iPt"></param>
+        /// <param name="x"></param>
+        /// <returns></returns>
         public string DistanceCompare(GraphPane pane, int iPt, int x)
         {
             string value = "";
@@ -1430,8 +1675,8 @@ namespace Data_Analysis_Software_Part_2
                     value = "0";
                 }
             }
-            catch (System.ArgumentOutOfRangeException) { }
-            catch (System.NullReferenceException) { }
+            catch (System.ArgumentOutOfRangeException) { value = "N/A"; }
+            catch (System.NullReferenceException) { value = "N/A"; }
             return value;
         }
     }
