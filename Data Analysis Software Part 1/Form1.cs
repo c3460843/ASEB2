@@ -26,6 +26,9 @@ namespace Data_Analysis_Software_Part_2
         /// </summary>
         HRMFile compareFile;
 
+        /// <summary>
+        /// File reading stream.
+        /// </summary>
         Stream myStream = null;
 
         /// <summary>
@@ -98,8 +101,19 @@ namespace Data_Analysis_Software_Part_2
         /// </summary>
         List<double> timeBetweenList = new List<double>();
 
+        /// <summary>
+        /// Current value for the normalised power.
+        /// </summary>
         double normalisedPower = 0;
+
+        /// <summary>
+        /// Counter to be used for index on rolling average array;
+        /// </summary>
         int normalisationCounter = 0;
+
+        /// <summary>
+        /// Array that stores the rolling average for the power for 30 instances.
+        /// </summary>
         double[] rollingAverage = new double[29]; 
 
         public Form1()
@@ -154,13 +168,15 @@ namespace Data_Analysis_Software_Part_2
         /// <param name="hRMFile"></param>
         public void Read(HRMFile hRMFile)
         {
-            string line;
+            string line = null;
             decimal runningTotalDistance = 0;
             bool data = false;
             StreamReader file = new StreamReader(myStream);
+           
+
             while ((line = file.ReadLine()) != null)
             {
-                if (line.Contains("Version"))
+                    if (line.Contains("Version"))
                 {
                     String[] lineArray = line.Split('=');
                     hRMFile.version = Int32.Parse(lineArray[1]);
@@ -173,23 +189,19 @@ namespace Data_Analysis_Software_Part_2
                     int i = 0;
                     if (hRMFile.version >= 106)
                     {
-                        if (sModeChars[i] == '0') { hRMFile.sModeSpeed = false; i++; }                  else if (sModeChars[i] == '1') { hRMFile.sModeSpeed = true; i++; }
-                        if (sModeChars[i] == '0') { hRMFile.sModeCadence = false; i++; }                else if (sModeChars[i] == '1') { hRMFile.sModeCadence = true; i++; }
-                        if (sModeChars[i] == '0') { hRMFile.sModeAltitude = false; i++; }               else if (sModeChars[i] == '1') { hRMFile.sModeAltitude = true; i++; }
-                        if (sModeChars[i] == '0') { hRMFile.sModePower = false; i++; }                  else if (sModeChars[i] == '1') { hRMFile.sModePower = true; i++; }
-                        if (sModeChars[i] == '0') { hRMFile.sModePowerLeftRightBalance = false; i++; }  else if (sModeChars[i] == '1') { hRMFile.sModePowerLeftRightBalance = true; i++; }
-                        if (sModeChars[i] == '0') { hRMFile.sModePowerPedallingIndex = false; i++; }    else if (sModeChars[i] == '1') { hRMFile.sModePowerPedallingIndex = true; i++; }
-                        if (sModeChars[i] == '0') { hRMFile.sModeHRCC = false; i++; }                   else if (sModeChars[i] == '1') { hRMFile.sModeHRCC = true; i++; }
-                        if (sModeChars[i] == '0') { hRMFile.sModeUnitStandard = false; i++; }           else if (sModeChars[i] == '1') { hRMFile.sModeUnitStandard = true; i++; }
+                        if (sModeChars[i] == '0') { hRMFile.sModeSpeed = false; i++; } else if (sModeChars[i] == '1') { hRMFile.sModeSpeed = true; i++; }
+                        if (sModeChars[i] == '0') { hRMFile.sModeCadence = false; i++; } else if (sModeChars[i] == '1') { hRMFile.sModeCadence = true; i++; }
+                        if (sModeChars[i] == '0') { hRMFile.sModeAltitude = false; i++; } else if (sModeChars[i] == '1') { hRMFile.sModeAltitude = true; i++; }
+                        if (sModeChars[i] == '0') { hRMFile.sModePower = false; i++; } else if (sModeChars[i] == '1') { hRMFile.sModePower = true; i++; }
+                        if (sModeChars[i] == '0') { hRMFile.sModePowerLeftRightBalance = false; i++; } else if (sModeChars[i] == '1') { hRMFile.sModePowerLeftRightBalance = true; i++; }
+                        if (sModeChars[i] == '0') { hRMFile.sModePowerPedallingIndex = false; i++; } else if (sModeChars[i] == '1') { hRMFile.sModePowerPedallingIndex = true; i++; }
+                        if (sModeChars[i] == '0') { hRMFile.sModeHRCC = false; i++; } else if (sModeChars[i] == '1') { hRMFile.sModeHRCC = true; i++; }
+                        if (sModeChars[i] == '0') { hRMFile.sModeUnitStandard = false; i++; } else if (sModeChars[i] == '1') { hRMFile.sModeUnitStandard = true; i++; }
                     }
                     if (hRMFile.version >= 107)
                     {
-                        if (sModeChars[i] == '0') { hRMFile.sModeAirPressure = false; i++; }            else if (sModeChars[8] == '1') { hRMFile.sModeAirPressure = true; i++; }
+                        if (sModeChars[i] == '0') { hRMFile.sModeAirPressure = false; i++; } else if (sModeChars[i] == '1') { hRMFile.sModeAirPressure = true; i++; }
                     }
-                    Console.WriteLine("Version="+ hRMFile.version);
-                    Console.WriteLine("SMode="+sModeChars[0].ToString() + sModeChars[1].ToString() + sModeChars[2].ToString() +
-                                               sModeChars[3].ToString() + sModeChars[4].ToString() + sModeChars[5].ToString() +
-                                               sModeChars[6].ToString() + sModeChars[7].ToString());
                 }
 
                 if (line.Contains("Date"))
@@ -232,7 +244,6 @@ namespace Data_Analysis_Software_Part_2
                     TimeSpan timeSpan = TimeSpan.FromSeconds(hRMFile.timeSecs);
                     if (!line.Contains("HRData"))
                     {
-                        //Console.WriteLine(line);
                         hRMFile.timeSecs += hRMFile.interval;
                         string timeString = timeSpan.ToString(@"hh\:mm\:ss");
                         String[] lineArray = line.Split();
@@ -240,7 +251,7 @@ namespace Data_Analysis_Software_Part_2
 
                         hRMFile.heartRateList.Add(Int32.Parse(lineArray[0]));
 
-                     
+
                         if (hRMFile.sModeSpeed == true)
                         {
                             hRMFile.speedList.Add(Int32.Parse(lineArray[1]));
@@ -251,12 +262,11 @@ namespace Data_Analysis_Software_Part_2
 
                             hRMFile.cummalativeDistanceList.Add(runningTotalDistance * 100);
 
-                            //Console.WriteLine("Running total distance: " + runningTotalDistance / 10);
 
                         }
-                        if (hRMFile.sModeCadence == true)               { hRMFile.cadenceList.Add(Int32.Parse(lineArray[2])); }
-                        if (hRMFile.sModeAltitude == true)              { hRMFile.altitudeList.Add(Int32.Parse(lineArray[3])); }
-                        if (hRMFile.sModePower == true)                 { hRMFile.powerList.Add(Int32.Parse(lineArray[4])); }
+                        if (hRMFile.sModeCadence == true) { hRMFile.cadenceList.Add(Int32.Parse(lineArray[2])); }
+                        if (hRMFile.sModeAltitude == true) { hRMFile.altitudeList.Add(Int32.Parse(lineArray[3])); }
+                        if (hRMFile.sModePower == true) { hRMFile.powerList.Add(Int32.Parse(lineArray[4])); }
 
                         try
                         {
@@ -265,21 +275,18 @@ namespace Data_Analysis_Software_Part_2
 
                             if (hRMFile.sModePowerLeftRightBalance == true) { hRMFile.powerLeftRightBalanceList.Add(1); }
                             if (hRMFile.sModePowerPedallingIndex == true) { hRMFile.powerPedallingIndexList.Add(1); }
-                        }catch (IndexOutOfRangeException)
+                        }
+                        catch (IndexOutOfRangeException)
                         {
-                            //Console.WriteLine("IndexOutOfRangeException");
                         }
                     }
                 }
-                //hRMFile.counter++;
             }
             file.Close();
             if (hRMFile == initialFile)
             {
                 AddRows(hRMFile);
-                //Console.WriteLine("AddRows()");
             }
-            //Console.WriteLine("Calculate");
             Calculate(hRMFile);
             heartRateTrackBar.Value = 0;
             powerTrackBar.Value = 0;
@@ -306,9 +313,6 @@ namespace Data_Analysis_Software_Part_2
                 if (hRMFile.sModeAltitude ==true) { altitudeValue = hRMFile.altitudeList[i].ToString(); }
                 if (hRMFile.sModePower == true)
                 {
-                    Console.WriteLine(i + "-----------------------------------------------------");
-                    Console.WriteLine("here");
-                    Console.WriteLine(normalisationCounter);
                     if (i >= 29)
                     {
                         if (normalisationCounter == 29) { normalisationCounter = 0; }
@@ -321,15 +325,12 @@ namespace Data_Analysis_Software_Part_2
                         {
                             rollingAverage[normalisationCounter] = Math.Pow((hRMFile.powerList[i]), 4.00);
                         }
-       
-                    Console.WriteLine("power of: " + hRMFile.powerList[i] + " / " + Math.Pow((hRMFile.powerList[i]), 4.00));
 
                     normalisationCounter++;
 
                     foreach (double value in rollingAverage)
                     {
                         total += value;
-                        //Console.WriteLine("total: " + total);
                     }
 
 
@@ -339,8 +340,6 @@ namespace Data_Analysis_Software_Part_2
                     }
 
                     hRMFile.normalisedPowerList.Add(Math.Round(normalisedPower, 0));
-                    Console.WriteLine("normalised power: " + normalisedPower);
-                    Console.WriteLine(i + "-----------------------------------------------------");
 
                     if (powerTrackBar.Value == 0)      { powerValue = hRMFile.powerList[i].ToString();  }
                     else if (powerTrackBar.Value == 1) { powerValue = Math.Round(hRMFile.powerPercentageList[i], 2).ToString();  }
@@ -451,7 +450,6 @@ namespace Data_Analysis_Software_Part_2
             {
                 //No user dialogue needed.
             }
-            //Console.WriteLine("Calculate()");
         }
 
 
@@ -463,9 +461,6 @@ namespace Data_Analysis_Software_Part_2
         /// <param name="max"></param>
         private void CalculatePortion(HRMFile hRMfile, int min, int max)
         {
-
-            //Console.WriteLine("min = " + min);
-            //Console.WriteLine("max = " + max);
 
             speedTotalRange = 0;
             speedMaximumRange = 0;
@@ -483,7 +478,6 @@ namespace Data_Analysis_Software_Part_2
 
                 foreach (int heartRateInt in heartTateListRange)
                 {
-                    //Console.WriteLine(heartRateInt);
                     heartRateTotalRange += heartRateInt;
                 }
                 double heartRateAverage = heartRateTotalRange / heartTateListRange.Count;
@@ -546,8 +540,6 @@ namespace Data_Analysis_Software_Part_2
             powerTotalRange = 0;
             powerMaximumRange = 0;
             distanceTotalRange = 0;
-            distanceCalculationFlagRange = false;
-            //Console.WriteLine("CalculatePortion()");
         }
 
 
@@ -595,8 +587,6 @@ namespace Data_Analysis_Software_Part_2
             var y4 = myPane1.AddYAxis("Heart Rate");
             var y5 = myPane1.AddYAxis("Power");
 
-
-            Console.WriteLine(3);
             for (int i = 0; i < initialFile.timeSecs / initialFile.interval; i++)
             {
                 DateTime dtLoop = initialFile.startDate.AddSeconds(i);
@@ -610,7 +600,6 @@ namespace Data_Analysis_Software_Part_2
 
             if (compareFile != null)
             {
-                Console.WriteLine("compareFile not null");
                 for (int i = 0; i < compareFile.timeSecs / compareFile.interval; i++)
                 {
                     DateTime dtLoop = initialFile.startDate.AddSeconds(i);
@@ -621,7 +610,6 @@ namespace Data_Analysis_Software_Part_2
                     heartRatePairListC.Add(xDateLoop, compareFile.heartRateList[i]);
                     powerPairListC.Add(xDateLoop, compareFile.powerList[i]);
                 }
-                Console.WriteLine("compareFile graph complete");
             }
 
 
@@ -676,7 +664,6 @@ namespace Data_Analysis_Software_Part_2
             zedGraphControl1.AxisChange();
             zedGraphControl1.Refresh();
 
-            Console.WriteLine("PlotGraph1()");
         }
 
 
@@ -712,8 +699,6 @@ namespace Data_Analysis_Software_Part_2
 
                 zedGraphControl2.AxisChange();
                 zedGraphControl2.Refresh();
-
-                Console.WriteLine("PlotGraph2()");
             }
             catch (Exception)
             {
@@ -807,7 +792,6 @@ namespace Data_Analysis_Software_Part_2
             zedGraphControl3.AxisChange();
             zedGraphControl3.Refresh();
 
-            Console.WriteLine("PlotGraph3()");
         }
         
         /// <summary>
@@ -860,7 +844,6 @@ namespace Data_Analysis_Software_Part_2
                         dataGridView.Rows.Clear();
                         initialFile = new HRMFile();
                         Read(initialFile);
-                        //Thread.Sleep(500);
                         if (initialFile.sModeUnitStandard == false)      { measurementTrackBar.Value = 0; }
                         else if (initialFile.sModeUnitStandard == true) { measurementTrackBar.Value = 1; }
                         PlotGraph1();
@@ -975,7 +958,6 @@ namespace Data_Analysis_Software_Part_2
             if (min != 0 && max != 0) { CalculatePortion(initialFile, min, max); }
 
             PlotGraph1();
-            //Console.WriteLine("measurementTrackBar_ValueChanged()");
         }
 
         /// <summary>
@@ -1033,7 +1015,6 @@ namespace Data_Analysis_Software_Part_2
         {
             if (userSetHeartRateMaximum != 0)
             {
-                //Console.WriteLine("HeartRateTrackBar_ValueChanged()");
                 dataGridView.Rows.Clear();
                 AddRows(initialFile);
             }
@@ -1050,7 +1031,6 @@ namespace Data_Analysis_Software_Part_2
         {
             if (userSetFTP != 0)
             {
-                //Console.WriteLine("PowerTrackBar_ValueChanged()");
                 dataGridView.Rows.Clear();
                 AddRows(initialFile);
             }
@@ -1523,8 +1503,6 @@ namespace Data_Analysis_Software_Part_2
             string difference = "";
             string op = "";
 
-            double distanceBetween = 0;
-
             try
             {
                 if (curve == speedCurve1)
@@ -1596,9 +1574,11 @@ namespace Data_Analysis_Software_Part_2
                     if (initialFile.powerList[iPt] < compareFile.powerList[iPt]) { op = "+"; }
                     difference = op + (compareFile.powerList[iPt] - initialFile.powerList[iPt]).ToString();
                 }
-            }catch (System.ArgumentOutOfRangeException) { difference = "N/A"; }
+            }
+            catch (System.ArgumentOutOfRangeException) { difference = "N/A"; }
+            catch (System.NullReferenceException) { difference = "N/A"; };
+
                        
-            Console.WriteLine(value+distanceBetween);
             return curve.Label.Text + ": " + curve[iPt].Y.ToString() + "(" + difference + ")" + " Distance Difference: " + value;
         }
 
@@ -1678,6 +1658,35 @@ namespace Data_Analysis_Software_Part_2
             catch (System.ArgumentOutOfRangeException) { value = "N/A"; }
             catch (System.NullReferenceException) { value = "N/A"; }
             return value;
+        }
+
+        /// <summary>
+        /// Button to initiate test class.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void TestFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                dataGridView.Rows.Clear();
+                initialFile = new HRMFile();
+                TestClass testClass = new TestClass();
+                testClass.Read(initialFile);
+                AddRows(initialFile);
+                Calculate(initialFile);
+                if (initialFile.sModeUnitStandard == false) { measurementTrackBar.Value = 0; }
+                else if (initialFile.sModeUnitStandard == true) { measurementTrackBar.Value = 1; }
+                PlotGraph1();
+                PlotGraph3();
+                setFTPButton.Enabled = true;
+                setBPMButton.Enabled = true;
+                button1.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error: " + ex.Message);
+            }
         }
     }
 }

@@ -190,6 +190,7 @@
             this.Power = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.np = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.PBPIndex = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.testFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.powerTrackBar)).BeginInit();
@@ -221,6 +222,7 @@
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openToolStripMenuItem,
+            this.testFileToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
@@ -2124,6 +2126,13 @@
             this.PBPIndex.ReadOnly = true;
             this.PBPIndex.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
+            // testFileToolStripMenuItem
+            // 
+            this.testFileToolStripMenuItem.Name = "testFileToolStripMenuItem";
+            this.testFileToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.testFileToolStripMenuItem.Text = "Test File";
+            this.testFileToolStripMenuItem.Click += new System.EventHandler(this.TestFileToolStripMenuItem_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -2323,6 +2332,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn Power;
         private System.Windows.Forms.DataGridViewTextBoxColumn np;
         private System.Windows.Forms.DataGridViewTextBoxColumn PBPIndex;
+        private System.Windows.Forms.ToolStripMenuItem testFileToolStripMenuItem;
     }
 }
 
